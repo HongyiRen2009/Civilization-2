@@ -767,7 +767,7 @@ function save(bindex){
 	for (const item of m.marketselections){
 		localmarketstats.push({price: item.price,amountincrease:item.amountincrease,stock:item.stock})
 	}
-	localStorage.setItem('griditems'+bindex, JSON.stringify({grid,roadgrid,rivergrid,hillgrid,sandgrid,landgrid,gridstats}));
+	localStorage.setItem('griditems'+bindex, JSON.stringify({grid,roadgrid,rivergrid,buildgrid,gridstats}));
 	localStorage.setItem('scrollinfo'+bindex, JSON.stringify([scrollX,scrollY,spawnX,spawnY,max]));
 	localStorage.setItem('pstats'+bindex, JSON.stringify({localtier,siege,weathermod,cities:p.cities,wars, megatemple,xp,totalxp,techstats,research_points,difficultymultiplier,unlocked,luck,buildingamounts,temporaryeffects,reputation,difficulty,modifiers,currentpop,military,resources,outofrange}));
 	localStorage.setItem('slot'+bindex, JSON.stringify(save_slot));
@@ -780,11 +780,8 @@ function save(bindex){
 }
 function load(bindex){
 	buildingamounts.length = 0
-	rivergrid.length=0
 	gridstats.length=0
 	grid.length=0
-	hillgrid.length=0
-	landgrid.length=0
 	marketitems.length=0
 	unlocked.length=0
 	wars.length=0
@@ -952,6 +949,7 @@ function newgame(difficult){
 	for (i=0;i<p.pieceROM.length;i++){
 	buildingamounts.push(0);
 }	
+	dev.removemax()
 	modifiers = {
 	population:0,
 	food: 15-difficult*10,
@@ -969,9 +967,7 @@ function newgame(difficult){
 	xp=0
 	totalxp=50
 	rivergrid.length = 0
-	hillgrid.length = 0
-	sandgrid.length = 0
-	landgrid.length = 0
+
 	p.cities.length = 0
 	m.assissin = 0
 	m.spy = 0
@@ -982,40 +978,23 @@ function newgame(difficult){
 	m.scout = false
 	m.shield = 0
 	grid.length = 0
+	buildgrid.length = 0
 	gridstats.length = 0
-	for (i=0;i<500;i++){
-	rivergrid.push([])
 	
-	}
 	for (i=0;i<5000;i++){
-	landgrid.push([])
-	
-	}
-	
-	for (i=0;i<500;i++){
-		hillgrid.push([])
-		
-	}
-	for (i=0;i<5000;i++){
-		sandgrid.push([])
-		
-	}
-	for (i=0;i<500;i++){
 		grid.push([])
 	}
-	
+	for (i=0;i<5000;i++){
+		buildgrid.push([])
+	}
 	
 	selectmarketitems()
-	const spawnpoint = {x:spawnX+Math.floor(widthmax/2),y:spawnY+Math.floor(heightmax/2)}
 
-	for (let i=0, rand = getRandomInt(4,8);i<rand;i++){
-		
-		generateIsland(spawnpoint.x,spawnpoint.y,getRandomInt(40,60),getRandomInt(40,60))
-		spawnpoint.x+=(getRandomInt(0,1)==0 ? getRandomInt(30,40):getRandomInt(-30,-40))
-		spawnpoint.y+=(getRandomInt(0,1)==0 ? getRandomInt(30,40):getRandomInt(-30,-40))
-	}
-	let xspawn = 50
-	let yspawn = 50
+	 const spawnpoint = {x:spawnX+Math.floor(widthmax/2),y:spawnY+Math.floor(heightmax/2)}
+	
+	generateIsland(spawnpoint.x,spawnpoint.y,getRandomInt(100,200),getRandomInt(100,200))
+/* 	let xspawn = 50
+	let yspawn = 100
 	for (let h=0,rand=getRandomInt(4,8);h<rand;h++){
 		
 		generateIsland(xspawn+getRandomInt(-30,30),yspawn+getRandomInt(-30,30), getRandomInt(20,40),getRandomInt(20,40))
@@ -1027,47 +1006,52 @@ function newgame(difficult){
 		}
 		
 		
-	}
-	for (i = 0; i<landgrid.length;i++){
-		landgrid[i].sort(function(a, b){return a - b})
-		const pointer = {plus:landgrid[i].length-1,minus:0}
-		for (let j =0, leng = landgrid[i].length;j<leng;j++){
-			if(checkocean(landgrid[i][j],i)==true){
-				sandgrid[i].push(landgrid[i][j])
-				
-				
-				continue
-			}
-			if(landgrid[i][j]>scrollX*20&&landgrid[i][j]<(scrollX+widthmax)*20){
-				
-			if(landgrid[i][j]>landgrid[i][pointer.plus]){
-				pointer.plus=j
-			}
-			if (landgrid[i][j]<landgrid[i][pointer.minus]){
-				pointer.minus=j
-			}
-			}
-		}
-		landgrid[i].push(pointer)
-	}
-	for (i = 0; i<sandgrid.length;i++){
-		sandgrid[i].sort(function(a, b){return a - b})
-		const pointer = {plus:sandgrid[i].length-1,minus:0}
-		for (let j =0, leng = sandgrid[i].length;j<leng;j++){
+	} */
+	for (i = 0; i<grid.length;i++){
+		grid[i].sort(function(a, b){return a - b})
+		const pointer = {plus:grid[i].length-1,minus:0}
 		
-			if(sandgrid[i][j]>scrollX*20&&sandgrid[i][j]<(scrollX+widthmax)*20){
+		for (let j =0, leng = grid[i].length;j<leng;j++){
+			
+			if(tiles[tilestats[tilecode(grid[i][j],i)].index].type=="grass"&&checkocean(grid[i][j],i)){
+				tilestats[tilecode(grid[i][j],i)] = {index:tileindex["sand"]}
+			}
 				
-			if(sandgrid[i][j]>sandgrid[i][pointer.plus]){
+				
+			
+			if(grid[i][j]>scrollX&&grid[i][j]<(scrollX+widthmax)){
+				
+			if(grid[i][j]>grid[i][pointer.plus]){
 				pointer.plus=j
 			}
-			if (sandgrid[i][j]<sandgrid[i][pointer.minus]){
+			if (grid[i][j]<grid[i][pointer.minus]){
 				pointer.minus=j
 			}
 			}
 		}
-		sandgrid[i].push(pointer)
+		grid[i].push(pointer)
 	}
-
+	for (i = 0; i<buildgrid.length;i++){
+		const pointer = {plus:buildgrid[i].length-1,minus:0}
+		
+		for (let j =0, leng = buildgrid[i].length;j<leng;j++){
+			
+			
+				
+				
+			
+			if(buildgrid[i][j]>scrollX&&buildgrid[i][j]<(scrollX+widthmax)){
+				
+			if(buildgrid[i][j]>buildgrid[i][pointer.plus]){
+				pointer.plus=j
+			}
+			if (buildgrid[i][j]<buildgrid[i][pointer.minus]){
+				pointer.minus=j
+			}
+			}
+		}
+		buildgrid[i].push(pointer)
+	}
 	
 if(psettings.notutorial){
 	displayUI()
@@ -1080,11 +1064,14 @@ displaypopup(3, confirmation)
 }
 function checkocean(x,y,river =false,amount=2){
 	for(let j = amount*-1;j<amount+1;j++){
+		
 		for (let k = amount*-1;k<amount+1;k++){
-			if(!landgrid[y+j].includes(x+k*20)&&!(river&&rivergrid[y+j].includes(x+k*20))){
+			
+			if((!river&&exists("river",x+k,y+j))||tilestats[tilecode(x+k,y+j)]==undefined&&!(river&&exists("river",x+k,y+j))){
 				
 				if(k!=0||j!=0){
-				return true
+				
+					return true
 				}
 			}
 		}

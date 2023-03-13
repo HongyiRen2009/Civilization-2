@@ -734,7 +734,7 @@ function render(){
 	ctx.fillRect(0,0, screen.width,screen.height)
 
 	
-	
+	ctx.fillStyle = "#000000"
 	for (i=scrollY;i<=Math.min(499,scrollY+heightmax);i++){
 		let plusindex = grid[i][grid[i].length-1].plus
 		let minusindex = grid[i][grid[i].length-1].minus
@@ -758,8 +758,9 @@ function render(){
 		
 		for (let j = minusindex-1;j<plusindex+1;j++){
 			if(tilestats[tilecode(grid[i][j],i)]==undefined){continue}
-			
-			ctx.fillStyle = tiles[tilestats[tilecode(grid[i][j],i)].index].color
+			if(ctx.fillStyle!=tiles[tilestats[tilecode(grid[i][j],i)].index].color){
+			 ctx.fillStyle= tiles[tilestats[tilecode(grid[i][j],i)].index].color
+			}
 			ctx.fillRect((grid[i][j]-scrollX)*scroll,(i-scrollY)*scroll,scroll,scroll)
 		}
 			

@@ -460,6 +460,9 @@ function removebuildings(intensity = 4,onhill=false){
 		
 		buildingamounts[gridstats[randomb].index]-=1
 		gridstats[randomb].disabled=true
+		for(const pos of gridstats[randomb].positions){
+			buildstats[pos].disabled=true
+		}
 		switch(gridstats[randomb].index){
 			case '11':
 			modifiers.military-=1
@@ -494,30 +497,35 @@ function removebuildings(intensity = 4,onhill=false){
 function isallowed(){
 localallowed = false
 for (i=0,len=piece.length;i!=len;i++){
+		debugger
 		
-		
-		if ((position.x/20)-(widthmax/2)+piece[i].x-spawnX>max.right||(position.x/20)-(widthmax/2)+piece[i].x-spawnX<max.left||(position.y/20)-(heightmax/2)+piece[i].y-spawnY>max.down||(position.y/20)-(heightmax/2)+piece[i].y-spawnY<max.up){
+		if ((position.x)-(widthmax/2)+piece[i].x-spawnX>max.right||(position.x)-(widthmax/2)+piece[i].x-spawnX<max.left||(position.y)-(heightmax/2)+piece[i].y-spawnY>max.down||(position.y)-(heightmax/2)+piece[i].y-spawnY<max.up){
 			return false
 		}
-		if (p.river &&!rivergrid[(position.y/20)+piece[i].y].includes(position.x+piece[i].x*20)){
+		if(tilestats[tilecode(position.x,position.y)]==undefined){
 			return false
 		}
-		else if (grid[(position.y/20)+piece[i].y].includes(position.x+piece[i].x*20) ||(!p.river&& (rivergrid[(position.y/20)+piece[i].y].includes(position.x+piece[i].x*20)))){
+		
+		if (p.river &&!exists('river',position.x+piece[i].x,position.y+piece[i].y)){
+			return false
+		}
+		else if (buildgrid[position.y+piece[i].y].includes(position.y+piece[i].y)){
+			
 			return false
 			
 		}
-		else if (!p.river &&!landgrid[(position.y/20)+piece[i].y].includes(position.x+piece[i].x*20)){
+		else if (!p.river &&exists('river',position.x+piece[i].x,position.x+piece[i].x)){
 			return false
 		}
 		if (p.pieceROM[p_index].near.includes("!hill")||p.pieceROM[p_index].near.includes("not")){
-			if (hillgrid[(position.y/20)+piece[i].y].includes(position.x+piece[i].x*20)){
+			if (exists("hill",position.x+piece[i].x,position.x+piece[i].x)){
 				return false
 				
 
 			}
 		}
 		if (p.pieceROM[p_index].near.includes("entire")){
-			if (!hillgrid[(position.y/20)+piece[i].y].includes(position.x+piece[i].x*20)){
+			if (!exists("hill",position.x+piece[i].x,position.y+piece[i].y)){
 				return false
 				
 
@@ -527,19 +535,19 @@ for (i=0,len=piece.length;i!=len;i++){
 			
 			
 			if (!first_turn){
-				if (grid[(position.y/20)+piece[i].y].includes(20+position.x+piece[i].x*20)){
+				if (buildgrid[position.y+piece[i].y].includes(position.x+piece[i].x+1)){
 					localallowed = true
 					
 				}
-				else if (grid[(position.y/20)+piece[i].y].includes(-20+position.x+piece[i].x*20)){
+				else if (buildgrid[position.y+piece[i].y].includes(position.x+piece[i].x-1)){
 					localallowed = true
 					
 				}
-				else if (grid[Math.min((grid.length-1),((1+position.y/20)+piece[i].y))].includes(position.x+piece[i].x*20)){
+				else if (buildgrid[position.y+piece[i].y+1].includes(position.x+piece[i].x)){
 					localallowed = true
 					
 				}
-				else if (grid[Math.max(0,(-1+position.y/20)+piece[i].y)].includes(position.x+piece[i].x*20)){
+				else if (buildgrid[position.y+piece[i].y-1].includes(position.x+piece[i].x)){
 					localallowed = true
 					
 				}
@@ -556,11 +564,11 @@ for (i=0,len=piece.length;i!=len;i++){
 			for (i=0;i!=piece.length;i++){
 			
 			if (p.pieceROM[p_index].near.includes("river")){
-				if (rivergrid[(position.y/20)+piece[i].y].includes(20+position.x+piece[i].x*20)){
+				if (exists('river',position.x+piece[i].x,position.y+piece[i].y+1)){
 					localallowed = true
 					break
 				}
-				else if (rivergrid[(position.y/20)+piece[i].y].includes(-20+position.x+piece[i].x*20)){
+				else if (exists('river',position.x+piece[i].x,position.y+piece[i].y)-1){
 					localallowed = true
 					break
 
@@ -568,7 +576,7 @@ for (i=0,len=piece.length;i!=len;i++){
 
 			}
 			if (p.pieceROM[p_index].near == "hill"){
-			if (hillgrid[(position.y/20)+piece[i].y].includes(position.x+piece[i].x*20)){
+			if (exists('hill',position.x+piece[i].x,position.y+piece[i].y)){
 				localallowed = true
 				break
 
@@ -578,12 +586,13 @@ for (i=0,len=piece.length;i!=len;i++){
 			}
 		return localallowed
 }
+
 canvas.onmousemove = function(event){
 	
 		
 if (ispainting){
 	
-	position = {x:(Math.ceil((event.clientX)/20)-1+scrollX)*20,y:(Math.round(event.clientY/20)-3+scrollY)*20}
+	position = {x:(Math.ceil((event.clientX)/scroll)+scrollX)-1,y:(Math.floor(event.clientY/scroll+scrollY-screen.height/(20*scroll)))}
 	if (position.x!=oldposition.x||position.y!=oldposition.y){
 		allowed = false
 	oldposition.x=position.x
@@ -591,9 +600,8 @@ if (ispainting){
 	
 
 
-render()
 ctx.beginPath();
-
+render()
 	allowed = isallowed()
 	
 	
@@ -602,30 +610,23 @@ ctx.beginPath();
 			
 			if (!allowed){
 				ctx.fillStyle = "rgba(255,0,0,0.5)"
-				if(psettings.noimage){
-					ctx.fillText(letter,position.x+10-(letter.length*4)-(scrollX*20)+piece[i].x*20,position.y+10-(scrollY*20)+piece[i].y*20);
-				}
-				else{
-				ctx.drawImage(buildimg,p.pieceROM[p_index].piecepositions[i].img.dx,p.pieceROM[p_index].piecepositions[i].img.dy,20,20,position.x-(scrollX*20)+piece[i].x*20,position.y+(-scrollY+piece[i].y)*20,20,20)
-				}
 				
-				ctx.fillRect(position.x-(scrollX*20)+piece[i].x*20,position.y+(-scrollY+piece[i].y)*20,20,20)
+				ctx.drawImage(buildimg,p.pieceROM[p_index].piecepositions[i].img.dx,p.pieceROM[p_index].piecepositions[i].img.dy,20,20,position.x*scroll-(scrollX*scroll)+piece[i].x*scroll,position.y*scroll+(-scrollY+piece[i].y)*scroll,scroll,scroll)
+				
+				
+				ctx.fillRect(position.x*scroll-(scrollX*scroll)+piece[i].x*scroll,position.y*scroll+(-scrollY+piece[i].y)*scroll,scroll,scroll)
 				
 
-			}
-			else{		
-			ctx.strokeStyle = "black"
-			if(psettings.noimage){
-				ctx.fillText(letter,position.x+10-(letter.length*4)-(scrollX*20)+piece[i].x*20,position.y+10-(scrollY*20)+piece[i].y*20);
-				ctx.rect(position.x-(scrollX*20)+piece[i].x*20,position.y+(-scrollY+piece[i].y)*20,20,20)
 			}
 			else{
+			ctx.strokeStyle = "black"
+			
 				ctx.fillStyle="rgba(0,255,0,0.7)"
-											ctx.fillRect(position.x-(scrollX*20)+piece[i].x*20,position.y+(-scrollY+piece[i].y)*20,20,20)
+				ctx.fillRect(position.x*scroll-(scrollX*scroll)+piece[i].x*scroll,position.y*scroll+(-scrollY+piece[i].y)*scroll,scroll,scroll)
 
-			ctx.drawImage(buildimg,p.pieceROM[p_index].piecepositions[i].img.dx,p.pieceROM[p_index].piecepositions[i].img.dy,20,20,position.x-(scrollX*20)+piece[i].x*20,position.y+(-scrollY+piece[i].y)*20,20,20)
+			ctx.drawImage(buildimg,p.pieceROM[p_index].piecepositions[i].img.dx,p.pieceROM[p_index].piecepositions[i].img.dy,20,20,position.x*scroll-(scrollX*scroll)+piece[i].x*scroll,position.y*scroll+(-scrollY+piece[i].y)*scroll,scroll,scroll)
 
-			}
+			
 		}
 		}
 		ctx.stroke();
@@ -634,7 +635,8 @@ ctx.beginPath();
 }
 }
 else if (removing||repairing){
-	position = {x:(Math.ceil((event.clientX)/20)-1+scrollX)*20,y:(Math.floor(event.clientY/20)-3+scrollY)*20}
+	
+	position = {x:(Math.ceil((event.clientX)/scroll)+scrollX)-1,y:(Math.floor(event.clientY/scroll)+scrollY-screen.height/(20*scroll))}
 
 
 
@@ -643,13 +645,14 @@ render()
 	
 	
 ctx.beginPath();
+	
 		if(removing){
 		ctx.strokeStyle="white"
 		}
 		else{
 			ctx.strokeStyle="#4d4d4d"
 		}
-			ctx.rect(position.x-(scrollX*20),position.y+-scrollY*20,21,21)
+			ctx.rect(position.x*scroll-(scrollX*scroll),position.y*scroll-scrollY*scroll,scroll,scroll)
 			ctx.stroke();
 ctx.closePath()
 
@@ -681,235 +684,147 @@ function isrepairing(){
 
 function renderclouds(){
 	
-	const grd = ctx.createLinearGradient(((spawnX-scrollX)*20)+screen.width/2+max.right*20,0,((spawnX-scrollX)*20)+screen.width+screen.width/2+max.right*20,0)
+	const grd = ctx.createLinearGradient(((spawnX-scrollX)*scroll)+screen.width/2+max.right*scroll,0,((spawnX-scrollX)*scroll)+screen.width+screen.width/2+max.right*scroll,0)
 	grd.addColorStop(1,"#ffffff")
 	grd.addColorStop(0.25,"#ffffff")
 	grd.addColorStop(0.15,"rgba(255,255,255,0.8)")
 	grd.addColorStop(0,"rgba(255,255,255,0)")
 	ctx.fillStyle = grd
-	ctx.fillRect(((spawnX-scrollX)*20)+screen.width/2+max.right*20,0,screen.width,screen.height)
-	const ygrd = ctx.createLinearGradient(((spawnX-scrollX)*20)-screen.width/2+max.left*20,0,((spawnX-scrollX)*20)+screen.width/2+max.left*20,0)
+	ctx.fillRect(((spawnX-scrollX)*scroll)+screen.width/2+max.right*scroll,0,screen.width,screen.height)
+	const ygrd = ctx.createLinearGradient(((spawnX-scrollX)*scroll)-screen.width/2+max.left*scroll,0,((spawnX-scrollX)*scroll)+screen.width/2+max.left*scroll,0)
 	ygrd.addColorStop(0,"#ffffff")
 	ygrd.addColorStop(0.75,"#ffffff")
 	ygrd.addColorStop(0.85,"rgba(255,255,255,0.8)")
 	ygrd.addColorStop(1,"rgba(255,255,255,0)")
 	ctx.fillStyle = ygrd
-	ctx.fillRect(((spawnX-scrollX)*20)-screen.width/2+max.left*20,0,screen.width,screen.height)
-	const yxgrd = ctx.createLinearGradient(0,(-80+(spawnY-scrollY)*20)+screen.height/2+max.down*20,0,(-80+(spawnY-scrollY)*20)+900+screen.height/2+max.down*20)
+	ctx.fillRect(((spawnX-scrollX)*scroll)-screen.width/2+max.left*scroll,0,screen.width,screen.height)
+	const yxgrd = ctx.createLinearGradient(0,(-80+(spawnY-scrollY)*scroll)+screen.height/2+max.down*scroll,0,(-80+(spawnY-scrollY)*scroll)+900+screen.height/2+max.down*scroll)
 	yxgrd.addColorStop(1,"#ffffff")
 	yxgrd.addColorStop(0.25,"#ffffff")
 	yxgrd.addColorStop(0.15,"rgba(255,255,255,0.8)")
 	yxgrd.addColorStop(0,"rgba(255,255,255,0)")
 	ctx.fillStyle = yxgrd
-	ctx.fillRect(0,(-80+(spawnY-scrollY)*20)+screen.height/2+max.down*20,screen.width,screen.height)
-	const xygrd = ctx.createLinearGradient(0,(-120+(spawnY-scrollY)*20)-screen.height/2+max.up*20,0,(-120+(spawnY-scrollY)*20)+screen.height/2+max.up*20)
+	ctx.fillRect(0,(-80+(spawnY-scrollY)*scroll)+screen.height/2+max.down*scroll,screen.width,screen.height)
+	const xygrd = ctx.createLinearGradient(0,(-120+(spawnY-scrollY)*scroll)-screen.height/2+max.up*scroll,0,(-120+(spawnY-scrollY)*scroll)+screen.height/2+max.up*scroll)
 	xygrd.addColorStop(0,"#ffffff")
 	xygrd.addColorStop(0.65,"#ffffff")
 	xygrd.addColorStop(0.75,"rgba(255,255,255,0.8)")
 	xygrd.addColorStop(1,"rgba(255,255,255,0)")
 	ctx.fillStyle = xygrd
-	ctx.fillRect(0,(-120+(spawnY-scrollY)*20)-screen.height/2+max.up*20,screen.width,screen.height)
+	ctx.fillRect(0,(-120+(spawnY-scrollY)*scroll)-screen.height/2+max.up*scroll,screen.width,screen.height)
 	ctx.fillStyle = "rgba(0,0,0,1)"
 	ctx.stroke()
 	
 }
-function searchrange(lower,higher,list){
+canvas.onwheel = function(event){
 	
-	let numlist = [...list]
-	while (numlist.length>1){
-		const numlen = numlist.length
-		if(numlist[Math.floor(numlen/2)]>higher){
-			numlist = numlist.slice(0,Math.floor(numlen/2))
-			
-		}
-		else if (numlist[Math.floor(numlen/2)]<lower){
-			numlist = numlist.slice(Math.floor(numlen/2),numlen-1)
-		}
-		else{
-			return numlist[Math.floor(numlen/2)]
-		}
-	}
-    
-   
-    return null
+	scroll-=event.deltaY/200
+	scroll=Math.round(Math.max(5,Math.min(50,scroll)))
+	heightmax = Math.round((screen.height*0.88)/scroll)
+	widthmax = Math.round((screen.width)/scroll)
+	render()
 }
 function render(){
 	
 	ctx.beginPath()
 	
-	ctx.clearRect(0,0,screen.width,screen.height)
+	 ctx.clearRect(0,0,screen.width,screen.height)
 	ctx.strokeStyle = "rgba(0,0,0,1)"
 					ctx.fillStyle = "#2B65EC"
 	ctx.fillRect(0,0, screen.width,screen.height)
-	ctx.fillStyle = "rgb(103, 104, 107)"
-	for (i=scrollY;i<=Math.min(499,scrollY+heightmax);i++){
-		
-		for (let j = 0, len =hillgrid[i].length; j<len;j++){
-			if (hillgrid[i][j]-20<scrollX*20+widthmax*20&&hillgrid[i][j]+20>scrollX*20){
-			
-			ctx.fillRect(hillgrid[i][j]-(scrollX*20),(i-scrollY)*20,20,20)
-			
-			}
-		}
-	}
-	ctx.fillStyle = "rgba(0,0,0,1)"
+
 	
-	ctx.fillStyle = "rgb(51, 166, 59)"
+	
 	for (i=scrollY;i<=Math.min(499,scrollY+heightmax);i++){
-		let plusindex = landgrid[i][landgrid[i].length-1].plus
-		let minusindex = landgrid[i][landgrid[i].length-1].minus
-		if(plusindex<landgrid[i].length-2){
-		while (landgrid[i][plusindex+1]<(scrollX+widthmax)*20){
+		let plusindex = grid[i][grid[i].length-1].plus
+		let minusindex = grid[i][grid[i].length-1].minus
+		if(plusindex<grid[i].length-2){
+		while (grid[i][plusindex+1]<(scrollX+widthmax)){
 			
 			plusindex+=1
 		}
 		}
-		while(landgrid[i][plusindex]>(scrollX+widthmax)*20){
+		while(grid[i][plusindex]>(scrollX+widthmax)){
 			plusindex-=1
 		}
 		if(minusindex>1){
-		while(landgrid[i][minusindex-1]>scrollX*20){
+		while(grid[i][minusindex-1]>scrollX){
 			minusindex-=1
 		}
 		}
-		while(landgrid[i][minusindex]<scrollX*20){
+		while(grid[i][minusindex]<scrollX){
+			minusindex+=1
+		}
+		
+		for (let j = minusindex-1;j<plusindex+1;j++){
+			if(tilestats[tilecode(grid[i][j],i)]==undefined){continue}
+			
+			ctx.fillStyle = tiles[tilestats[tilecode(grid[i][j],i)].index].color
+			ctx.fillRect((grid[i][j]-scrollX)*scroll,(i-scrollY)*scroll,scroll,scroll)
+		}
+			
+		
+		grid[i][grid[i].length-1].plus=plusindex
+		grid[i][grid[i].length-1].minus=minusindex
+	}
+	for (i=scrollY;i<=Math.min(499,scrollY+heightmax);i++){
+		
+		let plusindex = buildgrid[i][buildgrid[i].length-1].plus
+		let minusindex = buildgrid[i][buildgrid[i].length-1].minus
+		if(plusindex<buildgrid[i].length-2){
+		while (buildgrid[i][plusindex+1]<(scrollX+widthmax)){
+			
+			plusindex+=1
+		}
+		}
+		while(buildgrid[i][plusindex]>(scrollX+widthmax)){
+			plusindex-=1
+		}
+		if(minusindex>1){
+		while(buildgrid[i][minusindex-1]>scrollX){
+			minusindex-=1
+		}
+		}
+		while(buildgrid[i][minusindex]<scrollX){
 			minusindex+=1
 		}
 		
 		for (let j = minusindex-1;j<plusindex+1;j++){
 			
-			ctx.fillRect(landgrid[i][j]-(scrollX*20),(i-scrollY)*20,20,20)
+			if(buildstats[tilecode(buildgrid[i][j],i)]==undefined){continue}
 			
+			if(buildstats[tilecode(buildgrid[i][j],i)].disabled){
+				ctx.drawImage(buildimg2,buildstats[tilecode(buildgrid[i][j],i)].img.dx,buildstats[tilecode(buildgrid[i][j],i)].img.dy,20,20,(buildgrid[i][j]-scrollX)*20,(i-scrollY)*20,scroll,scroll)
+				} else if (!buildstats[tilecode(buildgrid[i][j],i)].inrange){
+				ctx.drawImage(buildimg3,buildstats[tilecode(buildgrid[i][j],i)].img.dx,buildstats[tilecode(buildgrid[i][j],i)].img.dy,20,20,(buildgrid[i][j]-scrollX)*20,(i-scrollY)*20,scroll,scroll)	
+				} else {
+					ctx.drawImage(buildimg,buildstats[tilecode(buildgrid[i][j],i)].img.dx,buildstats[tilecode(buildgrid[i][j],i)].img.dy,20,20,(buildgrid[i][j]-scrollX)*20,(i-scrollY)*20,scroll,scroll)
+				}
+		}
 			
-		}
-		landgrid[i][landgrid[i].length-1].plus=plusindex
-		landgrid[i][landgrid[i].length-1].minus=minusindex
-	}
-	ctx.fillStyle = "#ffe3a0"
-	for (i=scrollY;i<=Math.min(499,scrollY+heightmax);i++){
-		let plusindex = sandgrid[i][sandgrid[i].length-1].plus
-		let minusindex = sandgrid[i][sandgrid[i].length-1].minus
-		if(plusindex<sandgrid[i].length-2){
-		while (sandgrid[i][plusindex+1]<(scrollX+widthmax)*20){
-			plusindex+=1
-		}
-		}
-		while(sandgrid[i][plusindex]>(scrollX+widthmax)*20){
-			plusindex-=1
-		}
-		if(minusindex>1){
-		while(sandgrid[i][minusindex-1]>scrollX*20){
-			minusindex-=1
-		}
-		}
-		while(sandgrid[i][minusindex]<scrollX*20){
-			minusindex+=1
-		}
 		
-		for (let j = minusindex-1;j<plusindex+1;j++){
-			
-			ctx.fillRect(sandgrid[i][j]-(scrollX*20),(i-scrollY)*20,20,20)
-			
-			
-		}
-		sandgrid[i][sandgrid[i].length-1].plus=plusindex
-		sandgrid[i][sandgrid[i].length-1].minus=minusindex
+		buildgrid[i][buildgrid[i].length-1].plus=plusindex
+		buildgrid[i][buildgrid[i].length-1].minus=minusindex
 	}
-	ctx.fillStyle = "rgb(3,172,252)"	
-	for (i=scrollY;i<=Math.min(499,scrollY+heightmax);i++){
-		for (let j = 0, len = rivergrid[i].length;j<len;j++){
-			if (rivergrid[i][j]-20<scrollX*20+widthmax*20&&rivergrid[i][j]+20>scrollX*20){
-			
-			ctx.fillRect(rivergrid[i][j]-(scrollX*20),(i-scrollY)*20,20,20)
-			
-			}
-		}
-	}
-	ctx.fillStyle = "rgba(0,0,0,1)"
 	
-	ctx.closePath()
-
-	if (psettings.noimage){
-		
-		
-		for(len = gridstats.length,i=0;i<len;i++){
-			ctx.beginPath()
-			
-			if(gridstats[i].disabled){
-				ctx.strokeStyle = "rgba(0,0,0,0.2)"
-			}
-			else if (!gridstats[i].inrange){
-				ctx.strokeStyle = "rgba(255,0,0,1)"
-			}
-			else{
-				ctx.strokeStyle = "rgba(0,0,0,1)"
-			}
-			
-			for (let j = 0,len = gridstats[i].positions.length;j!=len;j++){
-				if(gridstats[i].positions[j].x-20<scrollX*20+widthmax*20&&gridstats[i].positions[j].x+20>scrollX*20)
-					ctx.fillText(gridstats[i].letter,gridstats[i].positions[j].x+10-(gridstats[i].letter.length*4)-scrollX*20,gridstats[i].positions[j].y+10-scrollY*20);
-					ctx.rect(gridstats[i].positions[j].x-scrollX*20,gridstats[i].positions[j].y-scrollY*20,19,19)
-			
-					
-					
-			}
-			ctx.stroke()
-			
-		}
-		
-		
-		ctx.strokeStyle = "rgba(0,0,0,1)"
-		for (const road in roadgrid){
-			const pos = JSON.parse(road)
-			
-			ctx.fillText("R",pos.x-scrollX*20+6,pos.y-scrollY*20+10);
-			ctx.rect(pos.x-scrollX*20,pos.y-scrollY*20,20,20)
-			
-		}
-	}
-	else{
-	for(len = gridstats.length,i=0;i<len;i++){
-		ctx.beginPath()
-		
-		
-		
-		for (let j = 0,len = gridstats[i].positions.length;j!=len;j++){
-		if(gridstats[i].positions[j].x-20<scrollX*20+widthmax*20&&gridstats[i].positions[j].x+20>scrollX*20){
-			if(gridstats[i].disabled){
-			ctx.drawImage(buildimg2,gridstats[i].positions[j].img.dx,gridstats[i].positions[j].img.dy,20,20,gridstats[i].positions[j].x-scrollX*20,gridstats[i].positions[j].y-scrollY*20,20,20)
-			ctx.stroke()
-			} else if (!gridstats[i].inrange){
-			ctx.drawImage(buildimg3,gridstats[i].positions[j].img.dx,gridstats[i].positions[j].img.dy,20,20,gridstats[i].positions[j].x-scrollX*20,gridstats[i].positions[j].y-scrollY*20,20,20)
-			ctx.stroke()
-			} else {
-			ctx.drawImage(buildimg,gridstats[i].positions[j].img.dx,gridstats[i].positions[j].img.dy,20,20,gridstats[i].positions[j].x-scrollX*20,gridstats[i].positions[j].y-scrollY*20,20,20)
-			ctx.stroke()
-			}
-
-
-		}
-		ctx.closePath()
-		}
 	
-		
-		
-	}
 	for (const road in roadgrid){
 		const pos = JSON.parse(road)
 		
 		
-		ctx.drawImage(buildimg,roadgrid[road].x,roadgrid[road].y,20,20,pos.x-scrollX*20,pos.y-scrollY*20,22,22)
+		ctx.drawImage(buildimg,roadgrid[road].x,roadgrid[road].y,20,20,(pos.x-scrollX)*scroll,(pos.y-scrollY)*scroll,scroll*1.1,scroll*1.1)
 		
 	}
-	
-}
+	 
+
+
 	renderclouds()
 
-	
-	
-	
-	
 }
+	
+	
+	
+
 
 function recalcBuildings() {
 	if(difficulty<10){
@@ -921,7 +836,7 @@ function recalcBuildings() {
 		building.inrange=false
 		for (const city of p.cities) {
 		for (const position of building.positions) {
-		if (Math.abs(position.x/20-city.x) <= 30 && Math.abs(position.y/20-city.y) <= 30) {
+		if (Math.abs(position.x-city.x) <= 30 && Math.abs(position.y-city.y) <= 30) {
 			building.inrange = true
 			outofrange--
 			break
@@ -942,28 +857,28 @@ function recalcroads(roads){
 	{
 		istrue(whichroad){
 			const pos = JSON.parse(whichroad)
-			return roadgrid[JSON.stringify({x:pos.x,y:pos.y-20})]!=undefined
+			return roadgrid[JSON.stringify({x:pos.x,y:pos.y-1})]!=undefined
 		}
 		
 	},
 	{
 		istrue(whichroad){
 			const pos = JSON.parse(whichroad)
-			return roadgrid[JSON.stringify({x:pos.x+20,y:pos.y})]!=undefined
+			return roadgrid[JSON.stringify({x:pos.x+1,y:pos.y})]!=undefined
 		}
 		
 	},
 	{
 		istrue(whichroad){
 			const pos = JSON.parse(whichroad)
-			return roadgrid[JSON.stringify({x:pos.x,y:pos.y+20})]!=undefined
+			return roadgrid[JSON.stringify({x:pos.x,y:pos.y+1})]!=undefined
 		}
 		
 	},
 	{
 		istrue(whichroad){
 			const pos = JSON.parse(whichroad)
-			return roadgrid[JSON.stringify({x:pos.x-20,y:pos.y})]!=undefined
+			return roadgrid[JSON.stringify({x:pos.x-1,y:pos.y})]!=undefined
 		}
 		
 	},
@@ -983,7 +898,7 @@ function recalcroads(roads){
 }
 canvas.onmousedown = function(event){
 	
-	if (ispainting && allowed&&position.y-scrollY*20<canvas.height){
+	if (ispainting && allowed){
 		allowed = false
 		let isInRange = false
 		click.play()
@@ -995,29 +910,33 @@ canvas.onmousedown = function(event){
 		p.fish = 0
 		const oldpop = unemployed
 		const gridposition = []
-		if((Math.floor(position.x-screen.width/2)/20)-spawnX+5>max.right){
-			max.right = (Math.floor(position.x-screen.width/2)/20)-spawnX+5
+		if(Math.floor(position.x-screen.width/40)-spawnX+5>max.right){
+			max.right = (Math.floor(position.x-screen.width/2)/scroll)-spawnX+5
 		}
-		if((Math.floor(position.x-screen.width/2)/20)-spawnX-5<max.left){
-			max.left = (Math.floor(position.x-screen.width/2)/20)-spawnX-5
+		if(Math.floor(position.x-screen.width/40)-spawnX-5<max.left){
+			max.left = (Math.floor(position.x-screen.width/2)/scroll)-spawnX-5
 		}
-		if(Math.floor((position.y-screen.height/2)/20)-spawnY+10>max.down){
-			max.down = (Math.floor(position.y-screen.height/2)/20)-spawnY+10
+		if(Math.floor(position.y-screen.height/40)-spawnY+10>max.down){
+			max.down = (Math.floor(position.y-screen.height/2)/scroll)-spawnY+10
 		}
-		if(Math.floor((position.y-screen.height/2)/20)-spawnY-5<max.up){
-			max.up = (Math.floor(position.y-screen.height/2)/20)-spawnY-5
+		if(Math.floor(position.y-screen.height/40)-spawnY-5<max.up){
+			max.up = (Math.floor(position.y-screen.height/2)/scroll)-spawnY-5
 		}
 		for (i=0;i!=piece.length;i++){
 			
-		gridposition.push({x:position.x+piece[i].x*20,y:position.y+piece[i].y*20,img:p.pieceROM[p_index].piecepositions[i].img})
-		grid[((position.y)/20+piece[i].y)].push(position.x+piece[i].x*20)
+		gridposition.push({x:position.x+piece[i].x,y:position.y+piece[i].y,img:p.pieceROM[p_index].piecepositions[i].img})
+		const point = buildgrid[((position.y)+piece[i].y)][0]
+		buildgrid[((position.y)+piece[i].y)].splice(0,0,position.x+piece[i].x)
+		buildgrid[((position.y)+piece[i].y)].sort(function(a, b){return a - b})
+		
+		
 		if (p.pieceROM[p_index].name == "Road" || p.pieceROM[p_index].name == "Bridge"||p.pieceROM[p_index].name == "Bonfire"||difficulty <10) {
 			isInRange = true
 			if(p.pieceROM[p_index].name == "Road"){
 				p.pieceROM[p_index].effect()
 				buildingamounts[p_index] +=1
 				roadgrid[JSON.stringify({x:position.x,y:position.y})] = {x:0,y:0}
-				recalcroads([JSON.stringify({x:position.x,y:position.y}),JSON.stringify({x:position.x+20,y:position.y}),JSON.stringify({x:position.x,y:position.y+20}),JSON.stringify({x:position.x,y:position.y-20}),JSON.stringify({x:position.x-20,y:position.y})])
+				recalcroads([JSON.stringify({x:position.x,y:position.y}),JSON.stringify({x:position.x+1,y:position.y}),JSON.stringify({x:position.x,y:position.y+1}),JSON.stringify({x:position.x,y:position.y-1}),JSON.stringify({x:position.x-1,y:position.y})])
 				displayUI()
 				render()
 				allowed = false
@@ -1031,18 +950,18 @@ canvas.onmousedown = function(event){
 		}
 		if (!isInRange) {
 			for (j=0; j < p.cities.length; j++) {
-				if (Math.abs(p.cities[j].x-gridposition[i].x/20) <= 15 && Math.abs(p.cities[j].y-gridposition[i].y/20) <= 15) {
+				if (Math.abs(p.cities[j].x-gridposition[i].x) <= 15 && Math.abs(p.cities[j].y-gridposition[i].y) <= 15) {
 					isInRange = true
 					break
 				}
 			}
 		}
+		buildstats[tilecode(position.x+piece[i].x,position.y+piece[i].y)] = {img:p.pieceROM[p_index].piecepositions[i].img,disabled:false,inrange:isInRange}
 		
-		
-		if (!hillgrid[gridposition[i].y/20].includes(gridposition[i].x)){
+		if (!exists("hill",position.x+piece[i].x,position.y+piece[i].y)){
 			p.entirehill = false
 		}
-		if (hillgrid[gridposition[i].y/20].includes(gridposition[i].x)){
+		if (exists("hill",position.x+piece[i].x,position.y+piece[i].y)){
 			p.hill = true
 		}
 		
@@ -1071,8 +990,8 @@ canvas.onmousedown = function(event){
 		first_turn = false
 		if(p_index==18){
 			gridstats[gridstats.length-1].citypos ={
-				x: position.x/20,
-				y: position.y/20
+				x: position.x,
+				y: position.y
 			}
 		}
 		if (!p.pieceROM[p_index].requires()){
@@ -1099,13 +1018,13 @@ canvas.onmousedown = function(event){
 		
 }
 
-else if (removing&&grid[position.y/20].includes(position.x)){
+else if (removing&&buildgrid[position.y].includes(position.x)){
 	
 	let found = false
 	let buildingindex = 0
 	if(roadgrid[JSON.stringify({x:position.x,y:position.y})]!=undefined){
 	delete roadgrid[JSON.stringify({x:position.x,y:position.y})]
-	recalcroads([JSON.stringify({x:position.x+20,y:position.y}),JSON.stringify({x:position.x,y:position.y+20}),JSON.stringify({x:position.x,y:position.y-20}),JSON.stringify({x:position.x-20,y:position.y})])
+	recalcroads([JSON.stringify({x:position.x+1,y:position.y}),JSON.stringify({x:position.x,y:position.y+1}),JSON.stringify({x:position.x,y:position.y-1}),JSON.stringify({x:position.x-1,y:position.y})])
 	render()
 	return
 }
@@ -1121,13 +1040,14 @@ else if (removing&&grid[position.y/20].includes(position.x)){
 	}
 	
 	for (const el of gridstats[buildingindex].positions){
-		const indexx = grid[el.y/20].indexOf(el.x)
-		grid[el.y/20].splice(indexx,1)
+		const indexx = buildgrid[el.y].indexOf(el.x)
+		buildgrid[el.y].splice(indexx,1)
+		delete buildstats[tilecode(el.x,el.y)]
 		breaksound.play()
 	}
 	resources+=Math.floor(gridstats[buildingindex].resourcerefund/2)
 	buildingamounts[gridstats[buildingindex].index]-=1
-	debugger
+	
 	switch(gridstats[buildingindex].index){
 		case "11":
 			modifiers.military-=1
@@ -1147,7 +1067,7 @@ else if (removing&&grid[position.y/20].includes(position.x)){
 	render()
 	displayUI()
 }
-else if (repairing&&grid[position.y/20].includes(position.x)){
+else if (repairing&&buildgrid[position.y].includes(position.x)){
 	let found = false
 	let buildingindex = 0
 	for (i=0, len=gridstats.length;i<len;i++){
@@ -1165,6 +1085,9 @@ else if (repairing&&grid[position.y/20].includes(position.x)){
 	repairsound.play()
 	resources-=Math.round(gridstats[buildingindex].resourcerefund/2)
 	gridstats[buildingindex].disabled=false
+	for(const pos of gridstats[buildingindex].positions){
+		buildstats[pos].disabled=false
+	}
 	switch(gridstats[buildingindex].index){
 		case '11':
 			modifiers.military+=1
@@ -1197,7 +1120,7 @@ document.onkeydown = function(event){
 					}
 					break
 				case "ArrowDown":
-					if (scrollY<499-heightmax&&scrollY-spawnY<max.down){
+					if (scrollY<4999-heightmax&&scrollY-spawnY<max.down){
 					move(0,1)
 					}
 					break
@@ -1207,7 +1130,7 @@ document.onkeydown = function(event){
 					}
 					break
 				case "ArrowRight":
-					if (scrollX<499&&scrollX-spawnX<max.right){
+					if (scrollX<4999&&scrollX-spawnX<max.right){
 					move(1,0)
 					}
 					break

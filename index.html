@@ -328,8 +328,10 @@ canvas2.style.left=canvasrect.left
 canvas2.style.right=canvasrect.right
 canvas2.style.top=canvasrect.top
 canvas2.style.bottom=canvasrect.bottom
-const heightmax = Math.round((screen.height*0.88)/20)
-const widthmax = Math.round((screen.width)/20)
+let scroll = 20
+let heightmax = Math.round((screen.height*0.88)/scroll)
+let widthmax = Math.round((screen.width)/scroll)
+const tilestats = {}
 const rivergrid = [] 
 const max = {
 	up:-40,
@@ -338,9 +340,9 @@ const max = {
 	right:40
 }
 const grid = []
-const hillgrid = []
-const landgrid = []
-const sandgrid = []
+const buildgrid = []
+const buildstats = {}
+
 const tabs = ["Housing","Farms","Military","Mines","City Centers","Misc"]
 const gridstats = []
 const wars = []
@@ -412,6 +414,7 @@ let punishamount = 0
 let allowed = true;
 let military = 0;
 let currentpop = 2;
+const tileindex = {}
 const click = new Audio("sounds/click.mp3");
 const build_music = new Audio("music/Build_music.mp3");
 const market_music = new Audio("music/Market_music.mp3");
@@ -545,4 +548,5 @@ const devmode = true
 <script src = "js/index.js"></script>
 <script src = "js/popups.js"></script>
 <script src = "js/devtools.js"></script>
+<script src = "js/tile.js"></script>
 </body>

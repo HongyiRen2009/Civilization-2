@@ -423,6 +423,7 @@ entirehill : false,
 }
 for (const un of p.pieceROM){
 	unlocked.push(un.unlocked)
+	buildindices.push(un.name)
 }
 
 
@@ -497,7 +498,7 @@ function removebuildings(intensity = 4,onhill=false){
 function isallowed(){
 localallowed = false
 for (i=0,len=piece.length;i!=len;i++){
-		debugger
+		
 		
 		if ((position.x)-(widthmax/2)+piece[i].x-spawnX>max.right||(position.x)-(widthmax/2)+piece[i].x-spawnX<max.left||(position.y)-(heightmax/2)+piece[i].y-spawnY>max.down||(position.y)-(heightmax/2)+piece[i].y-spawnY<max.up){
 			return false
@@ -509,16 +510,16 @@ for (i=0,len=piece.length;i!=len;i++){
 		if (p.river &&!exists('river',position.x+piece[i].x,position.y+piece[i].y)){
 			return false
 		}
-		else if (buildgrid[position.y+piece[i].y].includes(position.y+piece[i].y)){
+		else if (buildgrid[position.y+piece[i].y].includes(position.x+piece[i].x)){
 			
 			return false
 			
 		}
-		else if (!p.river &&exists('river',position.x+piece[i].x,position.x+piece[i].x)){
+		else if (!p.river &&exists('river',position.x+piece[i].x,position.y+piece[i].y)){
 			return false
 		}
 		if (p.pieceROM[p_index].near.includes("!hill")||p.pieceROM[p_index].near.includes("not")){
-			if (exists("hill",position.x+piece[i].x,position.x+piece[i].x)){
+			if (exists("hill",position.x+piece[i].x,position.y+piece[i].y)){
 				return false
 				
 
@@ -592,7 +593,9 @@ canvas.onmousemove = function(event){
 		
 if (ispainting){
 	
-	position = {x:(Math.ceil((event.clientX)/scroll)+scrollX)-1,y:(Math.floor(event.clientY/scroll+scrollY-screen.height/(20*scroll)))}
+	position = {
+		x:(Math.ceil((event.clientX)/scroll)+scrollX)-1,
+		y:(Math.floor(event.clientY/scroll+scrollY-screen.height/(20*scroll)))}
 	if (position.x!=oldposition.x||position.y!=oldposition.y){
 		allowed = false
 	oldposition.x=position.x
@@ -729,49 +732,15 @@ function render(){
 	ctx.beginPath()
 	
 	 ctx.clearRect(0,0,screen.width,screen.height)
-	ctx.strokeStyle = "rgba(0,0,0,1)"
-					ctx.fillStyle = "#2B65EC"
-	ctx.fillRect(0,0, screen.width,screen.height)
-
-	
-	ctx.fillStyle = "#000000"
-	for (i=scrollY;i<=Math.min(499,scrollY+heightmax);i++){
-		let plusindex = grid[i][grid[i].length-1].plus
-		let minusindex = grid[i][grid[i].length-1].minus
-		if(plusindex<grid[i].length-2){
-		while (grid[i][plusindex+1]<(scrollX+widthmax)){
-			
-			plusindex+=1
-		}
-		}
-		while(grid[i][plusindex]>(scrollX+widthmax)){
-			plusindex-=1
-		}
-		if(minusindex>1){
-		while(grid[i][minusindex-1]>scrollX){
-			minusindex-=1
-		}
-		}
-		while(grid[i][minusindex]<scrollX){
-			minusindex+=1
-		}
-		
-		for (let j = minusindex-1;j<plusindex+1;j++){
-			if(tilestats[tilecode(grid[i][j],i)]==undefined){continue}
-			if(ctx.fillStyle!=tiles[tilestats[tilecode(grid[i][j],i)].index].color){
-			 ctx.fillStyle= tiles[tilestats[tilecode(grid[i][j],i)].index].color
-			}
-			ctx.fillRect((grid[i][j]-scrollX)*scroll,(i-scrollY)*scroll,scroll,scroll)
-		}
-			
-		
-		grid[i][grid[i].length-1].plus=plusindex
-		grid[i][grid[i].length-1].minus=minusindex
-	}
-	for (i=scrollY;i<=Math.min(499,scrollY+heightmax);i++){
+	ctx.imageSmoothingEnabled = false;
+	ctx.drawImage(canvas3,scrollX,scrollY,widthmax,heightmax,0,0,widthmax*scroll,heightmax*scroll)
+	ctx.imageSmoothingEnabled=true;
+	if(scroll>8){
+	for (i=scrollY;i<=Math.min(4999,scrollY+heightmax);i++){
 		
 		let plusindex = buildgrid[i][buildgrid[i].length-1].plus
 		let minusindex = buildgrid[i][buildgrid[i].length-1].minus
+		
 		if(plusindex<buildgrid[i].length-2){
 		while (buildgrid[i][plusindex+1]<(scrollX+widthmax)){
 			
@@ -795,11 +764,11 @@ function render(){
 			if(buildstats[tilecode(buildgrid[i][j],i)]==undefined){continue}
 			
 			if(buildstats[tilecode(buildgrid[i][j],i)].disabled){
-				ctx.drawImage(buildimg2,buildstats[tilecode(buildgrid[i][j],i)].img.dx,buildstats[tilecode(buildgrid[i][j],i)].img.dy,20,20,(buildgrid[i][j]-scrollX)*20,(i-scrollY)*20,scroll,scroll)
+				ctx.drawImage(buildimg2,buildstats[tilecode(buildgrid[i][j],i)].img.dx,buildstats[tilecode(buildgrid[i][j],i)].img.dy,20,20,(buildgrid[i][j]-scrollX)*scroll,(i-scrollY)*scroll,scroll,scroll)
 				} else if (!buildstats[tilecode(buildgrid[i][j],i)].inrange){
-				ctx.drawImage(buildimg3,buildstats[tilecode(buildgrid[i][j],i)].img.dx,buildstats[tilecode(buildgrid[i][j],i)].img.dy,20,20,(buildgrid[i][j]-scrollX)*20,(i-scrollY)*20,scroll,scroll)	
+				ctx.drawImage(buildimg3,buildstats[tilecode(buildgrid[i][j],i)].img.dx,buildstats[tilecode(buildgrid[i][j],i)].img.dy,20,20,(buildgrid[i][j]-scrollX)*scroll,(i-scrollY)*scroll,scroll,scroll)	
 				} else {
-					ctx.drawImage(buildimg,buildstats[tilecode(buildgrid[i][j],i)].img.dx,buildstats[tilecode(buildgrid[i][j],i)].img.dy,20,20,(buildgrid[i][j]-scrollX)*20,(i-scrollY)*20,scroll,scroll)
+					ctx.drawImage(buildimg,buildstats[tilecode(buildgrid[i][j],i)].img.dx,buildstats[tilecode(buildgrid[i][j],i)].img.dy,20,20,(buildgrid[i][j]-scrollX)*scroll,(i-scrollY)*scroll,scroll,scroll)
 				}
 		}
 			
@@ -816,7 +785,7 @@ function render(){
 		ctx.drawImage(buildimg,roadgrid[road].x,roadgrid[road].y,20,20,(pos.x-scrollX)*scroll,(pos.y-scrollY)*scroll,scroll*1.1,scroll*1.1)
 		
 	}
-	 
+	}
 
 
 	renderclouds()
@@ -1108,9 +1077,25 @@ else if (repairing&&buildgrid[position.y].includes(position.x)){
 document.onkeydown = function(event){
 	if(event.key=="Escape"){
 		if(canvas.style.display=="block"){
-					pause_menu()
-				}
+			pause_menu()
+		}
+		return
 	}
+	if(event.key=="-"&&scroll>1){
+		scroll-=1
+		heightmax = Math.round((screen.height*0.88)/scroll)
+	widthmax = Math.round((screen.width)/scroll)
+	render()
+	return
+	}
+	else if (event.key=="="&&scroll<50){
+		scroll+=1
+		heightmax = Math.round((screen.height*0.88)/scroll)
+	widthmax = Math.round((screen.width)/scroll)
+	render()
+	return
+	}
+	else if (event)
 	if(techstats.exploration&&document.getElementById("popup_block_buttons").style.display!="block"&&canvas.style.display=="block"){
 		if(psettings.arrowkeys){
 			switch(event.key){
@@ -1150,7 +1135,7 @@ document.onkeydown = function(event){
 			}
 			break
 		case "s":
-			if (scrollY<499-heightmax&&scrollY-spawnY<max.down){
+			if (scrollY<4999-heightmax&&scrollY-spawnY<max.down){
 			move(0,1)
 			}
 			break
@@ -1160,7 +1145,7 @@ document.onkeydown = function(event){
 			}
 			break
 		case "d":
-			if (scrollX<499&&scrollX-spawnX<max.right){
+			if (scrollX<4999&&scrollX-spawnX<max.right){
 			move(1,0)
 			}
 			break

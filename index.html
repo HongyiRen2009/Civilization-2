@@ -141,8 +141,9 @@
  </div>
 
  <button class = "back_button" id = "back_button" hidden>Back</button>
-<canvas id="canvas" width="1500" height="500" id="canvas"></canvas>
+<canvas id="canvas" width="1500" height="500"></canvas>
 <canvas id="canvas2" width="1500" height="500"></canvas>
+<canvas id="canvas3" width="5000" height="5000" style = "position:absolute;display:none;"></canvas>
 
 <div class="select-grid" id="select-grid" hidden = true>
 <button class = 'cancel' id = "cancel" onclick = "cancel()">Cancel</button>
@@ -323,16 +324,27 @@ const canvas2 = document.getElementById("canvas2")
 canvas2.height = screen.height*0.88
 canvas2.width = screen.width
 const ctx2 = canvas2.getContext("2d")
+const canvas3 = document.getElementById("canvas3")
+
+const ctx3 = canvas3.getContext("2d")
 const canvasrect = canvas.getBoundingClientRect()
 canvas2.style.left=canvasrect.left
 canvas2.style.right=canvasrect.right
 canvas2.style.top=canvasrect.top
 canvas2.style.bottom=canvasrect.bottom
-let scroll = 20
+let scroll = 5
+let gridimg = ctx3.createImageData(5000,5000)
+for(let j=0,len=gridimg.data.length;j<len;j+=4){
+				gridimg.data[j] =43
+				gridimg.data[j+1] =101
+				gridimg.data[j+2] =236
+				gridimg.data[j+3] =255
+}
 let heightmax = Math.round((screen.height*0.88)/scroll)
 let widthmax = Math.round((screen.width)/scroll)
 const tilestats = {}
-const rivergrid = [] 
+const biomes = ["grass","desert","jungle"]
+const buildindices = []
 const max = {
 	up:-40,
 	down:40,
@@ -455,6 +467,7 @@ const buildingamounts = []
 const unlocked = []
 const roadgrid = {}
 const temporaryeffects = []
+const nations = []
 document.getElementById("noimage").addEventListener( "change", () => {if ( document.getElementById("noimage").checked ) {psettings.noimage = true;}else{psettings.noimage = false;};change_settings(noimage)});
 document.getElementById("nofade").addEventListener( "change", () => {if ( document.getElementById("nofade").checked ) {psettings.nofade = true;}else{psettings.nofade = false;};change_settings(nofade)});
 document.getElementById("arrowkeys").addEventListener( "change", () => {if ( document.getElementById("arrowkeys").checked ) {psettings.arrowkeys = true;}else{psettings.arrowkeys = false;};change_settings(arrowkeys)});

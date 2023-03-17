@@ -1,5 +1,5 @@
 
-function generateIsland(xpos,ypos,iheight, iwidth){
+function generateIsland(xpos,ypos,iheight, iwidth, continent=false){
 	let y = ypos
 	let x= xpos
 	let width=iwidth
@@ -13,12 +13,26 @@ function generateIsland(xpos,ypos,iheight, iwidth){
 	let maxx = x+width
 	let minx = x-width
 	let y2 = 0
+	const points = []
+	for(let i=0;i<Math.ceil(width/getRandomInt(32,64));i++){
+		const rand = getRandomInt(0,2)
+		
+		points.push({x:getRandomInt(minx,maxx),y:getRandomInt(y,y+height),biome:(rand ==0 ? tiles[rand].type:tiles[rand+3].type)})
+	}
+	
 	const rivery =[]
-	for (i = y; i <y+height;i++){
+	for (let i = y; i <y+height;i++){
 		for (let j = minx; j<maxx;j++){
-			
-			if(!exists("grass",j,i)){
-				addTile("grass",j,i)
+			let pointmax = {dist:Infinity,index:0}
+			if(!exists(biomes,j,i)){
+				
+				for(let k=0,len=points.length;k<len;k++){
+					if(distance(j,i,points[k].x,points[k].y)+getRandomInt(-2,2)<pointmax.dist){
+						pointmax.dist = distance(j,i,points[k].x,points[k].y)
+						pointmax.index=k
+					}
+				}
+				addTile(points[pointmax.index].biome,j,i)
 			}
 				
 			
@@ -28,12 +42,6 @@ function generateIsland(xpos,ypos,iheight, iwidth){
 				
 			
 			}
-		if(minx<minx1){
-			minx1=minx
-		}
-		if(maxx>maxx1){
-			maxx1=maxx
-		}
 		if(i==y+height-1){
 			
 			maxx2=maxx
@@ -49,16 +57,17 @@ function generateIsland(xpos,ypos,iheight, iwidth){
 	
 	for(i=minx1;i<maxx1;i++){
 		if(miny1>0){
-			for (let j =0;j<miny1;j++){
-				if(!exists("grass",i,y-j)){
-					addTile("grass",i,y-j)
+			for (let j =1;j<miny1;j++){
+				
+				if(!exists(biomes,i,y-j)){
+					addTile(tiles[tilestats[tilecode(i,y)].index].type,i,y-j)
 				}
 			}
 		}
 		else if(miny1<0){
 			
 			for (let j =0;j<Math.abs(miny1);j++){
-				if(exists("grass",i,y+j)){
+				if(exists(biomes,i,y+j)){
 					removetile(i,y+j)
 				}
 			}
@@ -72,9 +81,9 @@ function generateIsland(xpos,ypos,iheight, iwidth){
 	let miny2=0
 	for(i=minx2;i<maxx2;i++){
 		if(miny2>0){
-			for (let j =0;j<miny2;j++){
-				if(!exists("grass",i,y2+j)){
-					addTile("grass",i,y2+j)
+			for (let j =1;j<miny2;j++){
+				if(!exists(biomes,i,y2+j)){
+					addTile(tiles[tilestats[tilecode(i,y2)].index].type,i,y2+j)
 				}
 			
 				
@@ -84,7 +93,7 @@ function generateIsland(xpos,ypos,iheight, iwidth){
 			
 			for (let j =0;j<Math.abs(miny2);j++){
 	
-				if(exists("grass",i,y2-j)){
+				if(exists(biomes,i,y2-j)){
 					removetile(i,y2-j)
 				}
 			}
@@ -92,11 +101,32 @@ function generateIsland(xpos,ypos,iheight, iwidth){
 		miny2+=getRandomInt(-2,2)
 		
 	}
-	for (let j=0,rand=getRandomInt(Math.floor(width/32),Math.floor(width/64));j<rand;j++){
-		generatelake(getRandomInt(x-Math.floor(width/2),x+Math.floor(width/3)),getRandomInt(y+20,y+height-20),getRandomInt(Math.floor(width/12),Math.floor(width/8)),getRandomInt(Math.floor(height/12),Math.floor(height/8)))
+	const avalitiles = []
+	let xspawn=20
+	let yspawn=20
+	for (let j=0;yspawn<height-20;j+=20){
+		avalitiles.push({x:xspawn,y:yspawn})
+		xspawn+=20
+		if(xspawn>width){
+			xspawn=20
+			yspawn+=20
+		}
 	}
+	
 	for (let j=0,rand=getRandomInt(Math.floor(width/32),Math.floor(width/64));j<rand;j++){
-		generatehill(getRandomInt(x-Math.floor(width/2),x+Math.floor(width/3)),getRandomInt(y+20,y+height-20),getRandomInt(Math.floor(width/12),Math.floor(width/8)),getRandomInt(Math.floor(height/12),Math.floor(height/8)))
+		const rando = getRandomInt(0,avalitiles.length-1)
+		generatelake(minx+avalitiles[rando].x+getRandomInt(-10,10),y+avalitiles[rando].y+getRandomInt(-10,10),getRandomInt(Math.floor(width/12),Math.floor(width/8)),getRandomInt(Math.floor(height/12),Math.floor(height/8)))
+		avalitiles.splice(rando,1)
+	}
+	for (let j=0,rand=getRandomInt(Math.floor(width/24),Math.floor(width/48));j<rand;j++){
+		const rando = getRandomInt(0,avalitiles.length-1)
+		generatehill(minx+avalitiles[rando].x+getRandomInt(-10,10),y+avalitiles[rando].y+getRandomInt(-10,10),getRandomInt(Math.floor(width/12),Math.floor(width/8)),getRandomInt(Math.floor(height/12),Math.floor(height/8)))
+		avalitiles.splice(rando,1)
+	}
+	for (let j=0,rand=getRandomInt(Math.floor(width/24),Math.floor(width/48));j<rand;j++){
+		const rando = getRandomInt(0,avalitiles.length-1)
+		const newnation = new nation(minx+avalitiles[rando].x+getRandomInt(-10,10),y+avalitiles[rando].y+getRandomInt(-10,10))
+		nations.push(newnation)
 	}
 	
 	for (let j=0,rand=getRandomInt(Math.floor(width/32),Math.floor(width/64));j<rand;j++){
@@ -105,7 +135,7 @@ function generateIsland(xpos,ypos,iheight, iwidth){
 		generateriver(lakepos,rivery[rand],0,0,getRandomInt(4,6))
 	}
 }
-function generatelake(xpos,ypos,iwidth,iheight){
+function generatelake(xpos,ypos,iwidth,iheight,){
 	let y = ypos
 	let x= xpos
 	let width=iwidth
@@ -167,9 +197,10 @@ function generatelake(xpos,ypos,iwidth,iheight){
 		else if(miny1<0){
 			
 			for (let j =0;j<Math.abs(miny1);j++){
-				addTile("grass",i,y+j)
+				if(tilestats[tilecode(i,y+j-1)]!=undefined){
+				addTile(tiles[tilestats[tilecode(i,y+j-1)].index].type,i,y+j)
 				rivertiles.splice(rivertiles.indexOf(tilecode(i,y+j)),1)
-				
+				}
 			}
 		}
 		miny1+=getRandomInt(-2,2)
@@ -177,6 +208,7 @@ function generatelake(xpos,ypos,iwidth,iheight){
 	}
 	
 	let miny2=0
+	
 	for(let i=minx2;i<maxx2;i++){
 		if(miny2>0){
 			for (let j =0;j<miny2;j++){
@@ -198,7 +230,9 @@ function generatelake(xpos,ypos,iwidth,iheight){
 		else if(miny2<0){
 			
 			for (let j =0;j<Math.abs(miny2);j++){
-				addTile("grass",i,y2-j)
+				if(tilestats[tilecode(i,y+j+1)]!=undefined){
+				addTile(tiles[tilestats[tilecode(i,y+j+1)].index].type,i,y2-j)
+				}
 				rivertiles.splice(rivertiles.indexOf(tilecode(i,y2-j)),1)
 				
 			}
@@ -217,7 +251,7 @@ function generatelake(xpos,ypos,iwidth,iheight){
 	}
 }
 
-function generatehill(xpos,ypos,iwidth,iheight){
+function generatehill(xpos,ypos,iwidth,iheight,biome){
 	let y = ypos
 	let x= xpos
 	let width=iwidth
@@ -234,7 +268,7 @@ function generatehill(xpos,ypos,iwidth,iheight){
 	for (i = y; i <y+height;i++){
 		for (let j = minx; j<maxx;j++){
 			
-			if(exists("grass",j,i)){
+			if(exists(biomes,j,i)){
 				
 				addTile("hill",j,i)
 				
@@ -262,17 +296,17 @@ function generatehill(xpos,ypos,iwidth,iheight){
 	for(i=minx1;i<maxx1;i++){
 		if(miny1>0){
 			for (let j =0;j<miny1;j++){
-				if(!checkocean(i,y2+j,true,1)){
 				addTile("hill",i,y-j)
-				}
+				
 				
 			}
 		}
 		else if(miny1<0){
 			
 			for (let j =0;j<Math.abs(miny1);j++){
-				addTile("grass",i,y+j)
-
+				if(tilestats[tilecode(i,y+j-1)]!=undefined){
+				addTile(tiles[tilestats[tilecode(i,y+j-1)].index].type,i,y+j)
+				}
 				
 			}
 		}
@@ -292,8 +326,9 @@ function generatehill(xpos,ypos,iwidth,iheight){
 		else if(miny2<0){
 			
 			for (let j =0;j<Math.abs(miny2);j++){
-				addTile("grass",i,y2-j)
-
+				if(tilestats[tilecode(i,y2+j+1)]!=undefined){
+				addTile(tiles[tilestats[tilecode(i,y2+j+1)].index].type,i,y2-j)
+				}
 				
 			}
 		}
@@ -301,14 +336,14 @@ function generatehill(xpos,ypos,iwidth,iheight){
 		
 	}
 }
-function generateriver(xpos,ypos, curve, times = 0, width=2){
+function generateriver(xpos,ypos, curve, times = 0, width=2,biome){
 	let x = xpos
 	let rivertimes = times
 	let rivercurve = curve
 	let rand = 0
 	let oldx=xpos
 	const bseed = getRandomInt(-10,10)
-	const aseed = (Math.random()*4)-2
+	const aseed = (Math.random()*8)-4
 	for (let y = ypos;y<ypos+200;y++){
 		oldx = x
 		x=(0.5*Math.sin(0.5*aseed*y)+1.1*Math.sin(0.4*aseed*y-10)/3+1.2*Math.sin(0.3*aseed*y-bseed)/4)+x+(y*rivercurve)/100
@@ -325,9 +360,9 @@ function generateriver(xpos,ypos, curve, times = 0, width=2){
 
 		}
 		if(rivertimes<5&&getRandomInt(0,100)==0){
-			generateriver(x,y,rivercurve*-1,rivertimes,Math.max(2,width-1))
+			generateriver(x,y,rivercurve*-1,rivertimes,Math.max(2,width-1),biome)
 		}
-		if(exists("river",Math.floor(x),y)&&y!=ypos||!exists("grass",Math.floor(x),y+5))
+		if(exists("river",Math.floor(x),y)&&y!=ypos||!exists(biomes,Math.floor(x),y+1))
 		{
 			return
 		}

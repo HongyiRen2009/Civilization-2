@@ -115,7 +115,88 @@ function animloop() {
 	 
   }
 }
+class nation {
+	constructor(x,y){
+		this.resources=getRandomInt(12,20)
+		this.currentpop=getRandomInt(2,4)
+		this.unemployed=this.currentpop
+		this.food=0
+		this.resourcesgained=0
+		this.bordercolor = `rgb(${getRandomInt(0,255)},${getRandomInt(0,255),getRandomInt(0,255)})`
+		this.gridstats=[]
+		this.bordertiles = []
+		this.cities = []
+		createbuilding(this,x,y,"Bonfire")
+	}
 
+	
+}
+
+function createbuilding(context,x,y,type){
+	const gridposition=[]
+	const po_index = buildindices.indexOf(type)
+	for (const poce of p.pieceROM[po_index].piecepositions){
+		
+		gridposition.push({x:x+poce.x,y:y+poce.y,img:poce.img})
+		const point = buildgrid[((y)+poce.y)][0]
+		buildgrid[((y)+poce.y)].splice(0,0,x+poce.x)
+		buildgrid[((y)+poce.y)].sort(function(a, b){return a - b})
+		
+		
+		if (p.pieceROM[po_index].name == "Road" || p.pieceROM[po_index].name == "Bridge"||p.pieceROM[p_index].name == "Bonfire"||difficulty <10) {
+			isInRange = true
+			if(p.pieceROM[po_index].name == "Road"){
+				p.pieceROM[po_index].effect()
+				roadgrid[JSON.stringify({x:x,y:y})] = {x:0,y:0}
+				recalcroads([JSON.stringify({x:x,y:y}),JSON.stringify({x:x+1,y:y}),JSON.stringify({x:x,y:y+1}),JSON.stringify({x:x,y:y-1}),JSON.stringify({x:x-1,y:y})])
+				displayUI()
+				render()
+				allowed = false
+				first_turn=false
+				if (!p.pieceROM[po_index].requires()){
+					piece.length = 0
+					ispainting = false
+				}
+				return
+				}
+		}
+		
+		buildstats[tilecode(x+poce.x,y+poce.y)] = {img:poce.img,disabled:false,inrange:isInRange}
+		
+		if (!exists("hill",x+poce.x,y+poce.y)){
+			p.entirehill = false
+		}
+		if (exists("hill",x+poce.x,y+poce.y)){
+			p.hill = true
+		}
+		for(const tile of context.bordertiles){
+			for(const city of context.cities){
+
+			}
+		}
+	}
+	
+	
+	const oldresources = context.resources
+	const oldpop=context.unemployed
+	const ouroldpop = unemployed
+		p.pieceROM[p_index].effect()
+	context.unemployed-=ouroldpop-unemployed
+		context.gridstats.push({
+			index:p_index,
+			letter:letter,
+			population:p.population,
+			employmentrequired: oldpop-context.unemployed,
+			food:p.food,
+			resources:p.resources,
+			military:p.military,
+			xp:p.xp,
+			fish:p.fish,
+			positions:gridposition.slice(0),
+			resourcerefund: oldresources-context.resources,
+			disabled: false,
+		})
+}
 function createSimpleTable(rows) {
 	const table = document.createElement('table');
 	const tableBody = document.createElement('tbody');
@@ -136,7 +217,9 @@ function createSimpleTable(rows) {
 
 	return table;
 }
-
+function distance(x1,y1,x2,y2){
+	return Math.sqrt((x2-x1)**2+(y2-y1)**2)
+}
 
 function difficultyscreen(){
 
@@ -767,7 +850,7 @@ function save(bindex){
 	for (const item of m.marketselections){
 		localmarketstats.push({price: item.price,amountincrease:item.amountincrease,stock:item.stock})
 	}
-	localStorage.setItem('griditems'+bindex, JSON.stringify({grid,roadgrid,rivergrid,buildgrid,gridstats}));
+	localStorage.setItem('griditems'+bindex, JSON.stringify({grid,roadgrid,buildgrid,gridstats}));
 	localStorage.setItem('scrollinfo'+bindex, JSON.stringify([scrollX,scrollY,spawnX,spawnY,max]));
 	localStorage.setItem('pstats'+bindex, JSON.stringify({localtier,siege,weathermod,cities:p.cities,wars, megatemple,xp,totalxp,techstats,research_points,difficultymultiplier,unlocked,luck,buildingamounts,temporaryeffects,reputation,difficulty,modifiers,currentpop,military,resources,outofrange}));
 	localStorage.setItem('slot'+bindex, JSON.stringify(save_slot));
@@ -830,21 +913,11 @@ function load(bindex){
 	}
 	
 	research_points = JSON.parse(localStorage.getItem('pstats'+bindex)).research_points;
-	for (const el of JSON.parse(localStorage.getItem('griditems'+bindex)).rivergrid){
-		rivergrid.push(el)
-	}
-	for (const el of JSON.parse(localStorage.getItem('griditems'+bindex)).hillgrid){
-		hillgrid.push(el)
-	}
+	
 	for (const el of JSON.parse(localStorage.getItem('griditems'+bindex)).gridstats){
 		gridstats.push(el)
 	}
-	for (const el of JSON.parse(localStorage.getItem('griditems'+bindex)).landgrid){
-		landgrid.push(el)
-	}
-	for (const el of JSON.parse(localStorage.getItem('griditems'+bindex)).sandgrid){
-		sandgrid.push(el)
-	}
+	
 	const localmod = JSON.parse(localStorage.getItem('pstats'+bindex)).modifiers;
 	for (const el of JSON.parse(localStorage.getItem('pstats'+bindex)).temporaryeffects){
 		temporaryeffects.push(el)
@@ -931,7 +1004,6 @@ function newgame(difficult){
 			tech[i][j].tier =0
 		}
 	}
-	rivergrid.length=0
 	gridstats.length=0
 	grid.length=0
 	weathermod=0
@@ -941,8 +1013,8 @@ function newgame(difficult){
 	temporaryeffects.length=0
 	buildingamounts.length = 0
 	punishamount = 0
-	spawnX=getRandomInt(100,300)
-	spawnY=getRandomInt(100,300)
+	spawnX=getRandomInt(100,500)
+	spawnY=getRandomInt(100,500)
 	scrollX=spawnX
 	scrollY=spawnY
 	difficulty=0
@@ -966,7 +1038,6 @@ function newgame(difficult){
 	military=0
 	xp=0
 	totalxp=50
-	rivergrid.length = 0
 
 	p.cities.length = 0
 	m.assissin = 0
@@ -992,10 +1063,11 @@ function newgame(difficult){
 
 	 const spawnpoint = {x:spawnX+Math.floor(widthmax/2),y:spawnY+Math.floor(heightmax/2)}
 	
-	generateIsland(spawnpoint.x,spawnpoint.y,getRandomInt(100,200),getRandomInt(100,200))
-/* 	let xspawn = 50
+	generateIsland(spawnpoint.x,spawnpoint.y,getRandomInt(100,200),getRandomInt(100,200),true)
+	/*
+ 	let xspawn = 50
 	let yspawn = 100
-	for (let h=0,rand=getRandomInt(4,8);h<rand;h++){
+	for (let h=0,rand=getRandomInt(150,300);h<rand;h++){
 		
 		generateIsland(xspawn+getRandomInt(-30,30),yspawn+getRandomInt(-30,30), getRandomInt(20,40),getRandomInt(20,40))
 	
@@ -1006,31 +1078,27 @@ function newgame(difficult){
 		}
 		
 		
-	} */
+	}*/
 	for (i = 0; i<grid.length;i++){
-		grid[i].sort(function(a, b){return a - b})
-		const pointer = {plus:grid[i].length-1,minus:0}
 		
 		for (let j =0, leng = grid[i].length;j<leng;j++){
-			
-			if(tiles[tilestats[tilecode(grid[i][j],i)].index].type=="grass"&&checkocean(grid[i][j],i)){
+			const biomes = ["grass","jungle","desert"]
+			if(biomes.includes(tiles[tilestats[tilecode(grid[i][j],i)].index].type)&&checkocean(grid[i][j],i)){
 				tilestats[tilecode(grid[i][j],i)] = {index:tileindex["sand"]}
 			}
 				
-				
 			
-			if(grid[i][j]>scrollX&&grid[i][j]<(scrollX+widthmax)){
-				
-			if(grid[i][j]>grid[i][pointer.plus]){
-				pointer.plus=j
-			}
-			if (grid[i][j]<grid[i][pointer.minus]){
-				pointer.minus=j
-			}
-			}
+			gridimg.data[grid[i][j]*4+i*20000] =tiles[tilestats[tilecode(grid[i][j],i)].index].r
+				gridimg.data[grid[i][j]*4+1+i*20000] =tiles[tilestats[tilecode(grid[i][j],i)].index].g
+				gridimg.data[grid[i][j]*4+2+i*20000] =tiles[tilestats[tilecode(grid[i][j],i)].index].b
+				gridimg.data[grid[i][j]*4+3+i*20000] =255
+			
 		}
-		grid[i].push(pointer)
+	
+		
 	}
+	ctx3.putImageData(gridimg,0,0)
+	
 	for (i = 0; i<buildgrid.length;i++){
 		const pointer = {plus:buildgrid[i].length-1,minus:0}
 		

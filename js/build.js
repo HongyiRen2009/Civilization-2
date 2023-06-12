@@ -4,7 +4,7 @@ const p = {
       name: "Canopy",
       letter: "C",
       description:
-        "A small unit of housing that houses 1 person. Requires 1 resource to construct",
+        "A small unit of housing that houses 1 person. Requires 1 resources to construct",
       piecepositions: [{ x: 0, y: 0, img: { dx: 65, dy: 85 } }],
       tab: "Housing",
       unlocked: true,
@@ -446,7 +446,7 @@ const p = {
         if (context == undefined) {
           resources -= techstats.cement ? 1.5 : 3;
         } else {
-          contextresources -= context.techstats.cement ? 1.5 : 3;
+          context.resources -= context.techstats.cement ? 1.5 : 3;
         }
       },
       requires(context) {
@@ -628,8 +628,8 @@ const p = {
             (Math.max(difficulty - 5, 4) ** 2.7 / 100) * buildingamounts[18]
           );
           p.cities.push({
-            x: position.x / 20,
-            y: position.y / 20,
+            x: position.x,
+            y: position.y,
           });
           recalcBuildings();
         } else {
@@ -637,10 +637,81 @@ const p = {
             (Math.max(difficulty - 5, 4) ** 2.7 / 100) *
               context.buildingamounts[18]
           );
+          const x = context.drawposition.x;
+          const y = context.drawposition.y;
           context.cities.push({
-            x: position.x / 20,
-            y: position.y / 20,
+            x: x,
+            y: y,
+            borders: [],
           });
+          
+          const tempcity = []
+          for(const city of context.cities){
+            tempcity.push([...city.borders])
+            city.borders.length=0
+          }
+          for (let i=0;i<tempcity.length;i++) {
+            
+            for (const b of tempcity[i]) {
+              const x = tiledecode(b).x;
+              const y = tiledecode(b).y;
+              if (borders[tilecode(x, y)] == undefined) {
+                continue;
+              }
+              if (borders[tilecode(x, y)].id != context.id) {
+                continue;
+              }
+              let mincity = {
+                x: context.spawn.x,
+                y: context.spawn.y,
+                distance: Infinity,
+              };
+
+              let cIndex = 0;
+
+              for (let k = 0; k < context.cities.length; k++) {
+                const city = context.cities[k];
+                if (
+                  mincity == undefined ||
+                  hexdistance(x, y, city.x, city.y) < mincity.distance
+                ) {
+                  mincity = {
+                    distance: hexdistance(x, y, city.x, city.y),
+                    x: city.x,
+                    y: city.y,
+                  };
+                  cIndex = k;
+                }
+              }
+              borders[tilecode(x, y)].city = {
+                x: mincity.x,
+                y: mincity.y,
+              };
+              
+              
+                
+                context.cities[cIndex].borders.push(tilecode(x, y));
+                
+              
+            }
+          }
+          for (const b of context.cities[context.cities.length-1].borders) {
+              let x = tiledecode(b).x
+              let y = tiledecode(b).y
+              for(let i=-1;i<2;i++){
+                for(let j=-1;j<2;j++){
+
+                  if (borders[tilecode(x + j, y + i)] == undefined) {
+                    continue;
+                  }
+                  if (borders[tilecode(x + j, y + i)].id != context.id) {
+                    continue;
+                  }
+                  addBorderLines(x+j,y+i)
+                }
+              }
+            }
+          
         }
       },
       requires(context) {
@@ -766,6 +837,7 @@ const p = {
   population: 0,
   military: 0,
   resources: 0,
+  resources:0,
   fish: false,
   xp: 0,
   river: false,
@@ -775,6 +847,7 @@ const p = {
 for (const un of p.pieceROM) {
   unlocked.push(un.unlocked);
   buildindices.push(un.name);
+  reset.push(un.unlocked);
 }
 
 function removebuildings(intensity = 4, onhill = false) {
@@ -1156,19 +1229,21 @@ canvas.onwheel = function (event) {
 };
 function render() {
   ctx.clearRect(0, 0, screen.width, screen.height);
+
+  ctx.fillStyle = "rgb(43,101,236)";
+  ctx.fillRect(0, 0, screen.width, screen.height);
   ctx.imageSmoothingEnabled = false;
   ctx.drawImage(
     canvas3,
-    scrollX,
-    scrollY,
-    widthmax,
-    heightmax,
+    scrollX*16,
+    scrollY*16,
+    widthmax*16,
+    heightmax*16,
     0,
     0,
-    widthmax * scroll,
+    widthmax * scroll*1.01,
     heightmax * scroll
   );
-  ctx.imageSmoothingEnabled = true;
 
   if (scroll > 8) {
     for (i = scrollY; i <= Math.min(4999, scrollY + heightmax); i++) {
@@ -1284,6 +1359,7 @@ function render() {
     left: { x: Math.round(scroll / 6), y: 0 },
     right: { x: -Math.round(scroll / 6), y: 0 },
   };
+
   for (const line in borderlines) {
     ctx.beginPath();
     const lineposes = tiledecode(line);
@@ -1421,11 +1497,12 @@ function render() {
         }
         break;
     }
+
     ctx.stroke();
   }
+
   renderclouds();
   renderarmy();
-
   for (const n of nations) {
     ctx.fillStyle = "#586969";
 
@@ -1435,13 +1512,13 @@ function render() {
     ctx.fillRect(
       (n.spawn.x - scrollX) * scroll - Math.round(scroll / 2),
       (n.spawn.y - scrollY - 1) * scroll,
-      ctx.measureText(n.name).width + scroll,
+      ctx.measureText(n.name + "  " + n.currentpop).width + scroll,
       scroll * 2
     );
     ctx.strokeRect(
       (n.spawn.x - scrollX) * scroll - Math.round(scroll / 2),
       (n.spawn.y - scrollY - 1) * scroll,
-      ctx.measureText(n.name).width + scroll,
+      ctx.measureText(n.name + "  " + n.currentpop).width + scroll,
       scroll * 2
     );
     ctx.fill();
@@ -1449,8 +1526,8 @@ function render() {
     ctx.fillStyle = `rgb(${n.bordercolors.r}, ${n.bordercolors.g}, ${n.bordercolors.b})`;
 
     ctx.fillText(
-      n.name,
-      (n.spawn.x - scrollX) * scroll + name.length,
+      n.name + "  " + n.currentpop,
+      (n.spawn.x - scrollX) * scroll,
       (n.spawn.y - scrollY) * scroll
     );
   }
@@ -1462,7 +1539,7 @@ function renderarmy() {
 
   for (const n of nations) {
     ctx2.strokeStyle = `rgb(${n.linecolors.r}, ${n.linecolors.g}, ${n.linecolors.b})`;
-    
+
     for (const army of n.armies) {
       ctx2.fillStyle = `rgb(${n.bordercolors.r}, ${n.bordercolors.g}, ${n.bordercolors.b})`;
 
@@ -1475,13 +1552,16 @@ function renderarmy() {
         regpos.x + Math.cos((160 * Math.PI) / 180) * scroll,
         regpos.y + Math.sin((160 * Math.PI) / 180) * scroll
       );
-      for (let i = 232; i < 592; i += 72) {
+      for (let i = 232; i < 593; i += 72) {
         ctx2.lineTo(
           regpos.x +
             Math.cos(((i - Math.floor(i / 360) * 360) * Math.PI) / 180) *
+              Math.log(army.personnel / 200 + 2) *
               scroll,
           regpos.y +
-            Math.sin(((i - Math.floor(i / 360) * 360) * Math.PI) / 180) * scroll
+            Math.sin(((i - Math.floor(i / 360) * 360) * Math.PI) / 180) *
+              scroll *
+              Math.log(army.personnel / 200 + 2)
         );
       }
 
@@ -1495,7 +1575,54 @@ function renderarmy() {
         regpos.y + scroll * 2
       );
       //ctx2.fillRect((army.position.x-scrollX)*scroll,(army.position.y-scrollY)*scroll,scroll*Math.log(Math.max(army.personnel,10)),scroll*Math.log(Math.max(army.personnel,10)))
+      ctx2.fillStyle = "rgba(255,0,0,0.5)";
     }
+  }
+  for (let i = arrows.length - 1; i > -1; i--) {
+    const arrow = arrows[i];
+    if (
+      distance(
+        arrow.position.x,
+        arrow.position.y,
+        arrow.destination.x,
+        arrow.destination.y
+      ) < 2
+    ) {
+      if (
+        distance(
+          arrow.position.x,
+          arrow.position.y,
+          arrow.army.position.x,
+          arrow.army.position.y
+        ) < 2
+      ) {
+        let damage = arrow.damage;
+        arrow.army.troops.swords -= Math.ceil(damage / 9);
+        damage -= Math.ceil(damage / 9);
+        arrow.army.troops.archers -= damage;
+        getNationById(arrow.army.id).currentpop -= damage;
+      }
+      arrows.splice(i, 1);
+    }
+    ctx2.lineWidth = Math.floor(scroll / 5);
+    ctx2.strokeStyle = "black";
+
+    const direction = Math.atan2(
+      arrow.destination.y - arrow.position.y,
+      arrow.destination.x - arrow.position.x
+    );
+    ctx2.beginPath();
+    ctx2.moveTo(
+      (arrow.position.x - scrollX) * scroll,
+      (arrow.position.y - scrollY) * scroll
+    );
+    ctx2.lineTo(
+      (arrow.position.x + Math.cos(direction) - scrollX) * scroll,
+      (arrow.position.y + Math.sin(direction) - scrollY) * scroll
+    );
+    ctx2.stroke();
+    arrow.position.x += Math.cos(direction);
+    arrow.position.y += Math.sin(direction);
   }
 }
 
@@ -1948,7 +2075,7 @@ document.onkeydown = function (event) {
             }
             break;
           case "s":
-            if (scrollY < 4999 - heightmax && scrollY - spawnY < max.down) {
+            if (scrollY < 999 - heightmax && scrollY - spawnY < max.down) {
               move(0, 1);
             }
             break;
@@ -1958,7 +2085,7 @@ document.onkeydown = function (event) {
             }
             break;
           case "d":
-            if (scrollX < 4999 && scrollX - spawnX < max.right) {
+            if (scrollX < 999 && scrollX - spawnX < max.right) {
               move(1, 0);
             }
             break;

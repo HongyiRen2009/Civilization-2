@@ -71,9 +71,23 @@ const tiles = [
     g: 189,
     b: 146,
   },
+  {
+    type:"tree",
+    image:true,
+  },
 ];
 function addTile(type, x, y, index = undefined) {
-  tilestats[tilecode(x, y)] = { index: tileindex[type] };
+  if(tiles[tileindex[type]].image==true){
+    tileImages[tilecode(x, y)] = { index: tileindex[type] };
+    ctx3.imageSmoothingEnabled=false
+    ctx3.drawImage(document.getElementById("cloudimg4"),x*16, y*16, 16, 16);
+  }
+  else{
+    tilestats[tilecode(x, y)] = { index: tileindex[type] };
+    ctx3.fillStyle = tiles[tilestats[tilecode(x, y)].index].color;
+    ctx3.fillRect(x*16, y*16, 16, 16);
+  }
+  
   if (grid[y].includes(x)) {
     grid[y].splice(grid[y].indexOf(x), 1);
   }
@@ -82,6 +96,7 @@ function addTile(type, x, y, index = undefined) {
   } else {
     grid[y].splice(index, 0, x);
   }
+ 
 }
 function removetile(x, y) {
   delete tilestats[tilecode(x, y)];

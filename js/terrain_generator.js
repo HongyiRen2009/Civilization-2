@@ -105,17 +105,98 @@ class Perlin {
     return interpolated2;
   }
 }
+function generaterivers() {
+  const HEIGHT = 999;
+  const WIDTH = 999;
+//revert back to 999 after testing is done
+  const NODE_HEIGHT = 30;
+  const NODE_WIDTH = 30;
+
+
+
+  const pointLocationsCount = Array(WIDTH * HEIGHT).fill(0);
+
+  let pointLocations = [];
+  for (let x = 0; x < WIDTH; x += 50) {
+    for (let y = 0; y < HEIGHT; y += 50) {
+      pointLocations.push({ x, y });
+    }
+  }
+
+  for (let iteration = 0; iteration < 150; iteration++) {
+    const newPoints = [];
+    for (const point of pointLocations) {
+      const pixelColor = perlin17.getPixel(
+        (Math.round(point.x) * NODE_WIDTH) / WIDTH,
+        (Math.round(point.y) * NODE_HEIGHT) / HEIGHT
+      );
+
+      const directionX = Math.cos(pixelColor * 4 * Math.PI);
+      const directionY = Math.sin(pixelColor * 4 * Math.PI);
+
+      const newPoint = { x: point.x + directionX, y: point.y + directionY };
+
+      const xOutOfBounds = newPoint.x < 0 || newPoint.x > WIDTH;
+      const yOutOfBounds = newPoint.y < 0 || newPoint.y > HEIGHT;
+      if (xOutOfBounds || yOutOfBounds) continue;
+
+      let pixelIndex = Math.round(newPoint.x) + Math.round(newPoint.y) * HEIGHT;
+      // not sure why this case triggers
+      if (pointLocationsCount[pixelIndex] === undefined) {
+        pointLocationsCount[pixelIndex] = 0;
+      }
+      pointLocationsCount[pixelIndex]++;
+      newPoints.push(newPoint);
+      //return newPoint;
+    }
+    pointLocations = newPoints;
+  }
+
+  const adjust = (x) => x ** 0.3;
+  let max = 0;
+  for (const a of pointLocationsCount) {
+    if (a > max) {
+      max = a;
+    }
+  }
+  for (let x = 0; x < WIDTH; x++) {
+    for (let y = 0; y < HEIGHT; y++) {
+      
+    
+      
+      
+    
+        let i = x + y * WIDTH;
+    let pixelValue = pointLocationsCount[i];
+    let pixelColor = pixelValue / max;
+    pixelColor = adjust(pixelColor);
+    if(pixelColor>0.5){
+      addTile("river",x*2,y*2)
+      addTile("river",x*2+1,y*2+1)
+      addTile("river",x*2+1,y*2)
+      addTile("river",x*2,y*2+1)
+      addTile("river",x*2+2,y*2+1)
+      addTile("river",x*2+2,y*2)
+      addTile("river",x*2+2,y*2+2)
+      addTile("river",x*2+1,y*2+2)
+      addTile("river",x*2,y*2+2)
+    }
+    }
+  
+  }
+}
+
 function calcbiome(temp, hum) {
   if (temp < -0.3) {
-    return "snow";
+    return {biome:"snow",tree:0.3};
   } else if (hum < -0.3) {
-    return "desert";
+    return {biome:"desert",tree:0};
   } else if (hum < 0) {
-    return "savanna";
+    return {biome:"savanna",tree:0.4};
   } else if (hum > 0.3) {
-    return "jungle";
+    return {biome:"jungle",tree:Infinity};
   }
-  return "grass";
+  return {biome:"grass",tree:1};
 }
 function rerenderchunks(x, y) {
   for (let i = y; i < y + 50; i++) {
@@ -123,6 +204,8 @@ function rerenderchunks(x, y) {
       const xpos = j;
 
       const ypos = i;
+      const treeHeight = perlin18.getPixel(xpos / (5000 / nodes[13]), ypos / (5000 / nodes[13]))
+
       const height =
         (perlin.getPixel(xpos / (5000 / nodes[0]), ypos / (5000 / nodes[0])) +
           perlin2.getPixel(xpos / (5000 / nodes[1]), ypos / (5000 / nodes[1])) *
@@ -134,20 +217,12 @@ function rerenderchunks(x, y) {
           perlin5.getPixel(xpos / (5000 / nodes[4]), ypos / (5000 / nodes[4])) *
             0.125) **
         2;
-      const riverheight = perlin14.getPixel(
-        xpos / (5000 / nodes[10]),
-        ypos / (5000 / nodes[10])
-      )+perlin15.getPixel(
-        xpos / (5000 / nodes[12]),
-        ypos / (5000 / nodes[12])
-      )+perlin16.getPixel(
-        xpos / (5000 / nodes[12]),
-        ypos / (5000 / nodes[12])
-      )
+      
       const temp =
         perlin6.getPixel(xpos / (5000 / nodes[5]), ypos / (5000 / nodes[5])) +
         perlin7.getPixel(xpos / (5000 / nodes[6]), ypos / (5000 / nodes[6])) +
         perlin8.getPixel(xpos / (5000 / nodes[7]), ypos / (5000 / nodes[7]));
+
       const lakeheight =
         (perlin12.getPixel(xpos / (5000 / nodes[8]), ypos / (5000 / nodes[8])) +
           perlin13.getPixel(
@@ -164,14 +239,19 @@ function rerenderchunks(x, y) {
               xpos / (5000 / nodes[9]),
               ypos / (5000 / nodes[9])
             )) * 0.25;
-      if(riverheight>-0.05+height*0.1&&riverheight<0.05-height*0.1&&height > 0.015){
-        if (temp < -0.3) {
-          addTile("ice", xpos, ypos);
-        } else {
-          addTile("river", xpos, ypos);
+      if(tilestats[tilecode(xpos,ypos)]!=undefined&&tilestats[tilecode(xpos,ypos)].index==3){
+        if(height<0.02){
+          removetile(xpos,ypos)
+          ctx3.clearRect(j*16, i*16, 16, 16);
+
+          continue
         }
+        if(temp<-0.3){
+          addTile("ice",xpos,ypos)
+        }
+        continue
       }
-      else if (height > 0.55) {
+      if (height > 0.55) {
         addTile("snow", xpos, ypos);
       } else if (height > 0.3) {
         addTile("hill", xpos, ypos);
@@ -186,8 +266,11 @@ function rerenderchunks(x, y) {
             (xpos * 2) / (5000 / nodes[7]),
             (ypos * 2) / (5000 / nodes[7])
           );
-
-        addTile(calcbiome(temp, hum), xpos, ypos);
+          const tileBiome = calcbiome(temp, hum)
+        addTile(tileBiome.biome, xpos, ypos);
+        if(Math.abs(treeHeight*tileBiome.tree)>0.4){
+          addTile("tree",xpos,ypos)
+        }
       } else if (height > 0.02 + lakeheight) {
         addTile("sand", xpos, ypos);
       } else if (height > 0.015) {
@@ -197,12 +280,11 @@ function rerenderchunks(x, y) {
           addTile("river", xpos, ypos);
         }
       }
-      
 
-      if (tilestats[tilecode(j, i)] != undefined) {
+      /* if (tilestats[tilecode(j, i)] != undefined) {
         ctx3.fillStyle = tiles[tilestats[tilecode(j, i)].index].color;
-        ctx3.fillRect(j, i, 1, 1);
-      }
+        ctx3.fillRect(j*16, i*16, 16, 16);
+      } */
     }
   }
   loadedchunks.push(tilecode(Math.floor(x / 50), Math.floor(y / 50)));

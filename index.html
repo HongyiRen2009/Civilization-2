@@ -143,7 +143,7 @@
  <button class = "back_button" id = "back_button" hidden>Back</button>
 <canvas id="canvas" width="1500" height="500"></canvas>
 <canvas id="canvas2" width="1500" height="500" style="position: absolute;top: 50px;"></canvas>
-<canvas id="canvas3" width="5000" height="5000" style = "position:absolute;display:none;"></canvas>
+<canvas id="canvas3" width="16000" height="16000" style = "position:absolute;display:none;"></canvas>
 
 <div class="select-grid" id="select-grid" hidden = true>
 <button class = 'cancel' id = "cancel" onclick = "cancel()">Cancel</button>
@@ -184,6 +184,7 @@
 <img src = "images/build1.png" id = "cloudimg" style = 'display: none'></img>
 <img src = "images/build2.png" id = "cloudimg2" style = 'display: none'></img>
 <img src = "images/build3.png" id = "cloudimg3" style = 'display: none'></img>
+<img src = "images/tree.png" id = "cloudimg4" style = 'display: none'></img>
 <svg id = "techlinecontainer", class="techline"></svg>
 <div id = "settings-flex">
 	<div style="width: 100%;">
@@ -618,6 +619,7 @@ const data = [
   const dataObj = initializeObj()
   buildSuffixObj(dataObj)  
 </script>
+
 <script>
 const canvas = document.querySelector("canvas")
 canvas.height = screen.height*0.88
@@ -641,7 +643,9 @@ const canvasrect = canvas.getBoundingClientRect()
 const borderlines = {}
 const borders = {}
 const loadedchunks = []
-const nodes = [10,20,60,120,360,10,50,100,50,100,10,20,40]
+const tileImages = []
+
+const nodes = [10,20,60,120,240,10,50,100,50,100,10,20,40,80,60]
 let perlin
 let perlin2
 let perlin3
@@ -658,20 +662,20 @@ let perlin13
 let perlin14
 let perlin15
 let perlin16
+let perlin17
+let perlin18
 let seed
+let interval
 let scroll = 5
-let gridimg = ctx3.createImageData(5000,5000)
-for(let j=0,len=gridimg.data.length;j<len;j+=4){
-				gridimg.data[j] =43
-				gridimg.data[j+1] =101
-				gridimg.data[j+2] =236
-				gridimg.data[j+3] =255
-}
+
 let heightmax = Math.round((screen.height*0.88)/scroll)
 let widthmax = Math.round((screen.width)/scroll)
 const tilestats = {}
 const biomes = ["grass","desert","jungle"]
 const buildindices = []
+const arrows = []
+const defreset = []
+const reset = []
 const max = {
 	up:-40,
 	down:40,
@@ -784,7 +788,7 @@ let difficulty = 0;
 let first_turn = true;
 let removing = false;
 let luck = 0
-
+const worldD=5000
 let outofrange = 0
 
 let reputation = 0
@@ -834,6 +838,13 @@ function changefont() {
 			  se.style.fontFamily = 'Arial';
 			 }
 		}
+function hexdistance(x1,y1,x2,y2){
+    return Math.max(
+     Math.abs(y2 - y1),     
+     Math.abs(Math.ceil(y2 / -2) + x2 - Math.ceil(y1 / -2) - x1),
+     Math.abs(-y2 - Math.ceil(y1 / -2) - x2 + y1  + Math.ceil(y1 / -2) + x1)
+)
+}
 function switchtab(){
 	tab = document.getElementById("taboption").value
 	displaytab()
@@ -892,4 +903,3 @@ const devmode = true
 <script src = "js/devtools.js"></script>
 <script src = "js/tile.js"></script>
 <script src = "js/nations.js"></script>
-</body>

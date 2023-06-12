@@ -452,6 +452,7 @@ function savescreen(save) {
       ele.innerHTML = "Empty Slot";
     }
   }
+  clearInterval(interval)
   document.getElementById("title_start").style.display = "block";
   document.getElementById("title_start").innerHTML = "Select Save";
   document.getElementById("stats").style.display = "none";
@@ -1088,8 +1089,8 @@ function newgame(difficult) {
   temporaryeffects.length = 0;
   buildingamounts.length = 0;
   punishamount = 0;
-  spawnX = getRandomInt(100, 500);
-  spawnY = getRandomInt(100, 500);
+  spawnX = getRandomInt(500, 700);
+  spawnY = getRandomInt(500, 700);
   scrollX = spawnX;
   scrollY = spawnY;
   difficulty = 0;
@@ -1126,19 +1127,34 @@ function newgame(difficult) {
   grid.length = 0;
   buildgrid.length = 0;
   gridstats.length = 0;
-
-  for (i = 0; i < 5000; i++) {
+  for(let i=0;i<tech.length;i++){
+    tech[i].description=defreset[i]
+}
+  for(let i=0,len=p.pieceROM.length;i<len;i++){
+    unlocked[i]=reset[i]
+    p.pieceROM[i].unlocked=reset[i]
+  }
+  for (i = 0; i < worldD; i++) {
     grid.push([]);
   }
-  for (i = 0; i < 5000; i++) {
+  for (i = 0; i < worldD; i++) {
     buildgrid.push([]);
   }
 
   selectmarketitems();
 
-  const spawnpoint = {x:spawnX+Math.floor(widthmax/2),y:spawnY+Math.floor(heightmax/2)}
-	
-	generateIsland(spawnpoint.x,spawnpoint.y,getRandomInt(100,200),getRandomInt(100,200),true)
+  const spawnpoint = {
+    x: spawnX + Math.floor(widthmax / 2),
+    y: spawnY + Math.floor(heightmax / 2),
+  };
+
+  generateIsland(
+    spawnpoint.x,
+    spawnpoint.y,
+    getRandomInt(100, 200),
+    getRandomInt(100, 200),
+    true
+  );
   /* 
  	let xspawn = 100
 	let yspawn = 200
@@ -1171,139 +1187,119 @@ function newgame(difficult) {
   perlin14 = new Perlin(nodes[10], nodes[10], seed + 13);
   perlin15 = new Perlin(nodes[11], nodes[11], seed + 14);
   perlin16 = new Perlin(nodes[12], nodes[12], seed + 15);
-
-  /*
-	for(let i=0;i<10;i++){
+  perlin17 = new Perlin(nodes[14], nodes[14], seed + 16);
+  perlin18 = new Perlin(nodes[13], nodes[13], seed + 16);
+  generaterivers()
+  /* let nCount = 0
+  let xPos = 0
+  let yPos= 0
+	while(true){
 		
-		const xpos = getRandomInt(100,4000)
-		const ypos = getRandomInt(100,4000)
+		const xpos = getRandomInt(spawnX-200,spawnX+200)
+		const ypos = getRandomInt(spawnY-200,spawnY+200)
 		
-		const height = (perlin.getPixel(xpos/(5000/nodes[0]),ypos/(5000/nodes[0]))+perlin2.getPixel(xpos/(5000/nodes[1]),ypos/(5000/nodes[1]))*0.7+perlin3.getPixel(xpos/(5000/nodes[2]),ypos/(5000/nodes[2]))*0.5+perlin4.getPixel(xpos/(5000/nodes[3]),ypos/(5000/nodes[3]))*0.1+perlin5.getPixel(xpos/(5000/nodes[4]),ypos/(5000/nodes[4]))*0.05)**2
+		const height = (perlin.getPixel(xpos/(1000/nodes[0]),ypos/(1000/nodes[0]))+perlin2.getPixel(xpos/(1000/nodes[1]),ypos/(1000/nodes[1]))*0.7+perlin3.getPixel(xpos/(1000/nodes[2]),ypos/(1000/nodes[2]))*0.5+perlin4.getPixel(xpos/(1000/nodes[3]),ypos/(1000/nodes[3]))*0.1+perlin5.getPixel(xpos/(1000/nodes[4]),ypos/(1000/nodes[4]))*0.05)**2
 		
 		if(height>0.08){
-			const newnation = new nation(xpos,ypos)
-			nations.push(newnation)
-			rerenderchunks(xpos,ypos)
+      xPos=xpos
+      yPos=ypos
+			break
 		}
-	} */
-  for (let i = 0; i < grid.length; i++) {
-    for (let j = 0, leng = grid[i].length; j < leng; j++) {
-      gridimg.data[grid[i][j] * 4 + i * 20000] =
-        tiles[tilestats[tilecode(grid[i][j], i)].index].r;
-      gridimg.data[grid[i][j] * 4 + 1 + i * 20000] =
-        tiles[tilestats[tilecode(grid[i][j], i)].index].g;
-      gridimg.data[grid[i][j] * 4 + 2 + i * 20000] =
-        tiles[tilestats[tilecode(grid[i][j], i)].index].b;
-      gridimg.data[grid[i][j] * 4 + 3 + i * 20000] = 255;
+	}
+  for(let i=0;i<10;i++){
+    const xpos=xPos+getRandomInt(-50,50)
+    const ypos =yPos+getRandomInt(-50,50)
+    const height = (perlin.getPixel(xpos/(1000/nodes[0]),ypos/(1000/nodes[0]))+perlin2.getPixel(xpos/(1000/nodes[1]),ypos/(1000/nodes[1]))*0.7+perlin3.getPixel(xpos/(1000/nodes[2]),ypos/(1000/nodes[2]))*0.5+perlin4.getPixel(xpos/(1000/nodes[3]),ypos/(1000/nodes[3]))*0.1+perlin5.getPixel(xpos/(1000/nodes[4]),ypos/(1000/nodes[4]))*0.05)**2
+    if(height>0.08){
+    const newnation = new nation(xpos,ypos)
+    nations.push(newnation)
+    rerenderchunks(xpos,ypos)
     }
   }
-  ctx3.putImageData(gridimg, 0, 0);
-
+ */
   for (let i = nations.length - 1; i > -1; i--) {
     const nation = nations[i];
-    if (
-      exists("river", nation.spawn.x, nation.spawn.y) ||
-      tilestats[tilecode(nation.spawn.x, nation.spawn.y)] == undefined
-    ) {
-      nationids.splice(nationids.indexOf(nation.id), 1);
-      nations.splice(i, 1);
-      continue;
-    }
+    
     createbuilding(nation, nation.spawn.x, nation.spawn.y, "Bonfire", "any");
   }
 
-  setInterval(function () {
+  interval = setInterval(function () {
     for (const nation of nations) {
-      nation.builddelay -= 50;
+      nation.builddelay -= 100;
       if (nation.builddelay < 1) {
         giveitems(nation);
         choosebuilding(nation, structuredClone(nation.bordermaxes));
-        nation.builddelay = 50;
+        nation.builddelay = 100;
       }
-      let i=0
-      armypos={}
+      let i = 0;
+      armypos = {};
+      nation.destinations.length=0
       for (const army of nation.armies) {
-        if(army.personnel<1){
-          nation.armies.splice(i,1)
-        }
-        if (army.destination.length > 0) {
+        army.speed = Math.max(
+          0.05,
+          parseFloat((0.2-(0.2*Math.log(Math.max(army.personnel, 2)))/32).toFixed(1))
+        );
+        army.personnel=army.troops.swords+army.troops.archers+army.troops.calvery
+        if (army.personnel < 1) {
           
-          if(armypos[tilecode(Math.floor(army.position.x),Math.floor(army.position.y))]!=undefined){
-            const direction = Math.atan2(
-              armypos[tilecode(Math.floor(army.position.x),Math.floor(army.position.y))].y - army.position.y,
-              armypos[tilecode(Math.floor(army.position.x),Math.floor(army.position.y))].x - army.position.x
-            );
-            if(army.animationStage==0){
-            army.position.x += Math.cos(direction)*4;
-            army.position.y += Math.sin(direction) *4;
+          nation.armies.splice(i, 1);
+          
+          continue
+        }
+        
+				if(army.destination.length>0){
+          
+					const direction = Math.atan2(army.destination[0].y-army.position.y,army.destination[0].x-army.position.x)
+					if(exists("river",army.destination[0].x,army.destination[0].y)&&army.animationStage == 0&&exists("river",Math.round(army.position.x),Math.round(army.position.y))&&buildstats[tilecode(Math.round(army.position.x),Math.round(army.position.y))]==undefined){
+            if(getRandomInt(0,10)==0){
+              createbuilding(getNationById(army.id),Math.round(army.position.x),Math.round(army.position.y),"Bridge","any")
             }
           }
-          else{
-            armypos[tilecode(Math.floor(army.position.x),Math.floor(army.position.y))]=army.position
-          }
-          const direction = Math.atan2(
-            army.destination[0].y - army.position.y,
-            army.destination[0].x - army.position.x
-          );
-          if(army.animationStage==0){
-          army.position.x += Math.cos(direction) * army.speed;
-          army.position.y += Math.sin(direction) * army.speed;
-          }
-          if (
-            Math.abs(army.destination[0].x - army.position.x) < 1 &&
-            Math.abs(army.destination[0].y - army.position.y) < 1
-          ) {
-            army.destination.splice(0, 1);
-          }
-
-          if (
-            army.status == 0 &&
-            (borders[
-              tilecode(Math.floor(army.position.x), Math.floor(army.position.y))
-            ] == undefined ||
-              borders[
-                tilecode(
-                  Math.floor(army.position.x),
-                  Math.floor(army.position.y)
-                )
-              ] != nation.id ||
-              tilestats[
-                tilecode(
-                  Math.floor(army.position.x),
-                  Math.floor(army.position.y)
-                )
-              ] == undefined ||
-              exists(
-                "river",
-                Math.floor(army.position.x),
-                Math.floor(army.position.y)
-              ))
-          ) {
-            army.position.x -= Math.cos(direction) * army.speed;
-            army.position.y -= Math.sin(direction) * army.speed;
-            army.destination.splice(0, 1);
-            army.destination.push({
-              x: army.position.x + getRandomInt(-30, 30),
-              y: army.position.y + getRandomInt(-30, 30),
-            });
-          }
-          if (
-            borders[
-              tilecode(Math.floor(army.position.x), Math.floor(army.position.y))
-            ] != nation.id&&nation.wars.includes(borders[
-              tilecode(Math.floor(army.position.x), Math.floor(army.position.y))
-            ])
-          ) {
-            conquerborder(
-              Math.floor(army.position.x),
-              Math.floor(army.position.y),
-              nation
-            );
+          else if(army.animationStage==0){
+          army.position.x+=Math.cos(direction)*army.speed*(exists("hill",Math.floor(army.position.x),Math.floor(army.position.y)) ? 0.5:1)*(exists("river",army.position.x,army.position.y)&&(buildstats[tilecode(army.position.x,army.position.y)]==undefined||buildstats[tilecode(army.position.x,army.position.y)].disabled) ? 0.25:1)
+					army.position.y+=Math.sin(direction)*army.speed*(exists("hill",Math.floor(army.position.x),Math.floor(army.position.y)) ? 0.5:1)*(exists("river",army.position.x,army.position.y)&&(buildstats[tilecode(army.position.x,army.position.y)]==undefined||buildstats[tilecode(army.position.x,army.position.y)].disabled)
+          
+          
+          
+          
+           ? 0.25:1)
           }
           
-          if (getNationById(army.id).wars.length > 0) {
+          else if (army.animationStage > 0) {
+            army.position.x += Math.cos(direction) *0.5;
+            army.position.y += Math.sin(direction) * 0.5;
+            army.animationStage += 1;
+            if (army.animationStage > 3) {
+              army.animationStage = -1;
+            }
+          } else {
+            army.position.x -= Math.cos(direction) *0.5;
+            army.position.y -= Math.sin(direction) *0.5;
+            army.animationStage -= 1;
+            if (army.animationStage < -3) {
+              army.animationStage = 0;
+            }
+          }
+          
+					if(Math.abs(army.destination[0].x-army.position.x)<1&&Math.abs(army.destination[0].y-army.position.y)<1){
+						army.destination.splice(0,1)
+					}
+					
+					
+					if (getNationById(army.id).wars.length > 0) {
+            
             for (const war of nation.wars) {
               const n = getNationById(war);
+              if(n.cities.length<1){
+                declarepeace(nation,n)
+              }
+              let k= 0
+              for (const city of n.cities){
+                if(distance(army.position.x,army.position.y,city.x,city.y)<2){
+                  convertCity(nation,n,city,k)
+                }
+                k++
+              }
               for (const a of n.armies) {
                 if (
                   distance(
@@ -1311,156 +1307,172 @@ function newgame(difficult) {
                     army.position.y,
                     a.position.x,
                     a.position.y
-                  ) < 32
-                )  {
+                  ) < (army.status==0 ? 30:10)
+                ) {
                   
-                  army.destination.splice(0, 1);
-                  army.destination.push({ x: a.position.x, y: a.position.y });
-                  
+                  if((army.destination.length<1||distance(
+                    army.position.x,
+                    army.position.y,
+                    army.destination[army.destination.length-1].x,
+                    army.destination[army.destination.length-1].y
+                  )>distance(
+                    army.position.x,
+                    army.position.y,
+                    a.position.x,
+                    a.position.y
+                  )) &&!nation.destinations.includes(tilecode(Math.floor(a.position.x/4),
+                    Math.floor(a.position.y/4)))){
                     
-                    if(army.animationStage==0){
-                      if(distance(
+                  /*   if(army.destination.length>0&&Math.floor(army.destination[army.destination.length-1].x)==Math.floor(a.position.x)&&Math.floor(army.destination[army.destination.length-1].y)==Math.floor(a.position.y)){
+                      
+                      continue
+                    }
+                      let closestindex=0
+                      let i=0
+                      let closest=army.position
+                      for(const destination of army.destination){
+                        if(distance(destination.x,destination.y,a.position.x,a.position.y)>distance(destination.x,destination.y,closest.x,closest.y)){
+                          closest=destination
+                          closestindex=0
+                        }
+                        i++
+                      }
+                      
+                      army.destination.splice(closestindex)
+                      army.destination.concat(aStar(closest,{x:Math.floor(a.position.x),y:Math.floor(a.position.y)}))
+                    
+                    */
+                      army.destination.length=0
+
+                  if(army.personnel*getRandomInt(8,12)*0.1<a.personnel&&army.destination.length<2){
+                    let max=0
+                    let position;
+                    
+                    for(let i=-1;i<2;i++){
+                      for(let j=-1;j<2;j++){
+                          if(army.position.x+j<0||army.position.x+j>999||army.position.y+i<0||army.position.y+i>999){
+                              continue
+                          }
+                          if(tilestats[tilecode(Math.floor(army.position.x+j),Math.floor(army.position.y+i))]==undefined){
+                          
+                              continue
+                          }
+                          
+                          const currentdist =distance(army.position.x,army.position.y,a.position.x,a.position.y)*(exists("hill",Math.floor(army.position.x),Math.floor(army.position.y)) ? 0.5:1)*(exists("river",army.position.x,army.position.y)&&(buildstats[tilecode(army.position.x,army.position.y)]==undefined||buildstats[tilecode(army.position.x,army.position.y)].disabled) ? 0.25:1)*getRandomInt(8,12)*0.1
+                          if(currentdist>max){
+                            max = currentdist
+                            position = {x:army.position.x+j,y:army.position.y}
+                          }
+                    
+                      }
+                    }
+                    army.destination.push(position)
+                    const chosenarmy = nation.armies[getRandomInt(0,nation.armies.length-1)]
+                    if(chosenarmy.status==0&&chosenarmy.animationStage==0&&chosenarmy.destination.length<1&&distance(army.position.x,army.position.y,chosenarmy.position.x,chosenarmy.position.y)<50){
+                    chosenarmy.destination=aStar({x:Math.floor(chosenarmy.position.x),y:Math.floor(chosenarmy.position.y)},{x:Math.floor(army.position.x),y:Math.floor(army.position.y)})
+                    }
+                  }
+                  else{
+                    army.destination=aStar({x:Math.floor(army.position.x),y:Math.floor(army.position.y)},{x:Math.floor(a.position.x),y:Math.floor(a.position.y)})
+                    
+                  }
+                  }
+                  if (army.animationStage == 0) {
+                    if (
+                      distance(
                         army.position.x,
                         army.position.y,
                         a.position.x,
                         a.position.y
-                      ) < 3&&a.personnel>0){
-                        
-                    const random = Math.random()
-                    const damage = Math.ceil(army.troops.swords*random*0.1)
-                    a.troops.swords-=damage
-                    a.personnel-=damage
-               
-                    army.animationStage=1
-                    
-                      }
+                      ) < 3 &&
+                      a.personnel > 0
+                    ) {
+                      const random = Math.random();
+                      
+                      let damage = Math.ceil((army.troops.swords*2+army.troops.archers/2) * random * 0.1);
+                      getNationById(a.id).currentpop -= damage;
+
+                      a.troops.swords -= Math.ceil(damage/9);
+                      damage -=Math.ceil(damage/9)
+                      a.troops.archers -= damage
+                      army.animationStage = 1;
                     }
-                    else if(army.animationStage>0){
-                      army.position.x += Math.cos(direction) * 0.05;
-                      army.position.y += Math.sin(direction) * 0.05;
-                      army.animationStage+=1
-                      if(army.animationStage>9){
-                        army.animationStage=-1
-                      }
+                    if (
+                      distance(
+                        army.position.x,
+                        army.position.y,
+                        a.position.x,
+                        a.position.y
+                      ) < 10 &&
+                      a.personnel > 0&&getRandomInt(0,10)<Math.ceil(army.troops.archers/10)
+                    ) {
+                      
+                     
+                      
+                      
+                      arrows.push(new arrow(Math.ceil((army.troops.archers/16) * Math.random() * 0.1),{x:army.position.x+getRandomInt(-2,2),y:army.position.y+getRandomInt(-2,2)},{x:a.position.x+getRandomInt(-2,2),y:a.position.y+getRandomInt(-2,2)},a))
                     }
-                    else{
-                      army.position.x -= Math.cos(direction) * 0.06;
-                      army.position.y -= Math.sin(direction) * 0.06;
-                      army.animationStage-=1
-                      if(army.animationStage<-9){
-                        army.animationStage=0
-                      }
-                    }
-                  }
-                 
+                  } 
+                }
+              }
+            }
+          }
+          if(army.animationStage==0&&army.destination.length<2&&army.status==0&&(borders[tilecode(Math.round(army.position.x),Math.round(army.position.y))]==undefined||borders[tilecode(Math.round(army.position.x),Math.round(army.position.y))].id!=nation.id||tilestats[tilecode(Math.round(army.position.x),Math.round(army.position.y))]==undefined||exists("river",Math.round(army.position.x),Math.round(army.position.y)))){
+						army.position.x-=Math.cos(direction)*army.speed
+						army.position.y-=Math.sin(direction)*army.speed
+						army.destination.splice(0,1)
+						army.destination.push({x:army.position.x+getRandomInt(-30,30),y:army.position.y+getRandomInt(-30,30)})
+
+					}
+          if(army.destination.length>0){
+            
+          nation.destinations.push(tilecode(Math.floor(army.destination[army.destination.length-1].x/4),Math.floor(army.destination[army.destination.length-1].y/4)))
+          }
+				}
+        else{
+          
+          switch(army.status){
+            
+            case 0:
+            if(getRandomInt(0,20*1/(nation.wars.length+1))==0){
+              army.destination.push({x:army.position.x+getRandomInt(-30,30),y:army.position.y+getRandomInt(-30,30)})
+            }
+            break
+            case 1:
+              const randwar =getNationById(nation.wars[getRandomInt(0,nation.wars.length-1)])
+                   army.destination = (aStar({x:Math.floor(army.position.x),y:Math.floor(army.position.y)},randwar.cities[getRandomInt(0,randwar.cities.length-1)]))
+
                 
-              }
             }
-          }
-          if (
-            buildstats[
+        }
+        
+        
+        if (
+          borders[
+            tilecode(Math.floor(army.position.x), Math.floor(army.position.y))
+          ]!=undefined&&
+          borders[
+            tilecode(Math.floor(army.position.x), Math.floor(army.position.y))
+          ].id != nation.id &&
+          nation.wars.includes(
+            borders[
               tilecode(Math.floor(army.position.x), Math.floor(army.position.y))
-            ] != undefined
-          ) {
-            const n = getNationById(
-              buildstats[
-                tilecode(
-                  Math.floor(army.position.x),
-                  Math.floor(army.position.y)
-                )
-              ].id
-            );
-            if (
-              !n.gridstats[
-                n.buildingids.indexOf(
-                  buildstats[
-                    tilecode(
-                      Math.floor(army.position.x),
-                      Math.floor(army.position.y)
-                    )
-                  ].pointer
-                )
-              ].disabled &&
-              nation.wars.includes(
-                n.gridstats[
-                  n.buildingids.indexOf(
-                    buildstats[
-                      tilecode(
-                        Math.floor(army.position.x),
-                        Math.floor(army.position.y)
-                      )
-                    ].pointer
-                  )
-                ].id
-              )
-            ) {
-              n.gridstats[
-                n.buildingids.indexOf(
-                  buildstats[
-                    tilecode(
-                      Math.floor(army.position.x),
-                      Math.floor(army.position.y)
-                    )
-                  ].pointer
-                )
-              ].disabled = true;
-              n.currentpop-=n.gridstats[
-                n.buildingids.indexOf(
-                  buildstats[
-                    tilecode(
-                      Math.floor(army.position.x),
-                      Math.floor(army.position.y)
-                    )
-                  ].pointer
-                )
-              ].employmentrequired+Math.floor(n.gridstats[
-                n.buildingids.indexOf(
-                  buildstats[
-                    tilecode(
-                      Math.floor(army.position.x),
-                      Math.floor(army.position.y)
-                    )
-                  ].pointer
-                )
-              ].population/n.currentpop)
-              for (const pos of n.gridstats[
-                n.buildingids.indexOf(
-                  buildstats[
-                    tilecode(
-                      Math.floor(army.position.x),
-                      Math.floor(army.position.y)
-                    )
-                  ].pointer
-                )
-              ].positions) {
-                buildstats[tilecode(pos.x, pos.y)].disabled = true;
-              }
-            }
-          }
+            ].id
+          )
+        ) {
+          conquerborder(
+            Math.floor(army.position.x),
+            Math.floor(army.position.y),
+            nation
+          );
         }
-        switch (army.status) {
-          case 0:
-            if (army.destination.length < 1 && getRandomInt(0, 100) == 0) {
-              army.destination.push({
-                x: army.position.x + getRandomInt(-30, 30),
-                y: army.position.y + getRandomInt(-30, 30),
-              });
-            }
-            break;
-          case 1:
-            if (army.destination.length < 1) {
-              army.destination.push(
-                getNationById(
-                  nation.wars[getRandomInt(0, nation.wars.length - 1)]
-                ).spawn
-              );
-            }
-        }
+
         i++
       }
     }
     renderarmy();
-  }, 50);
+    
+  }, 100);
 
   for (i = 0; i < buildgrid.length; i++) {
     const pointer = { plus: buildgrid[i].length - 1, minus: 0 };
@@ -1621,7 +1633,6 @@ function move(x, y) {
       j++
     ) {
       if (!loadedchunks.includes(tilecode(j, i))) {
-        debugger;
         rerenderchunks(j * 50, i * 50);
       }
     }
